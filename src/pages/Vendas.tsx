@@ -128,10 +128,6 @@ export default function Vendas() {
     setShowDetalhes(true);
   };
 
-  if (loading) {
-    return <div className="p-6">Carregando...</div>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
