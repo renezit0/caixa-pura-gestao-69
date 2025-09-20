@@ -45,9 +45,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </Button>
           
           <div className="hidden lg:block">
-            <h2 className="text-lg font-semibold">Sistema de Gestão</h2>
+            <h2 className="text-lg font-semibold">Caixa Pura</h2>
             <p className="text-sm text-muted-foreground">
-              Bem-vindo ao painel administrativo
+              Painel de Controle
             </p>
           </div>
         </div>
