@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/AuthContext'; // Add this import
 import {
   ShoppingCart,
   Trash2,
@@ -59,6 +60,7 @@ interface Cliente {
 
 const PDV = () => {
   const { toast } = useToast();
+  const { user } = useAuth(); // Add this line to get the current user
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -258,6 +260,15 @@ const PDV = () => {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não identificado. Faça login novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -266,7 +277,7 @@ const PDV = () => {
         .from('vendas')
         .insert({
           cliente_id: selectedClient && selectedClient !== 'sem-cliente' ? selectedClient : null,
-          usuario_id: (await supabase.auth.getUser()).data.user?.id,
+          usuario_id: user.id, // Use the user ID from the auth context
           subtotal: getSubtotal(),
           desconto,
           total: getTotal(),
