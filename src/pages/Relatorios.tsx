@@ -217,10 +217,6 @@ export default function Relatorios() {
 
   const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
-  if (loading) {
-    return <div className="p-6">Carregando relatórios...</div>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
