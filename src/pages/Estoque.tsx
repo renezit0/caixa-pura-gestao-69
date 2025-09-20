@@ -10,11 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Package,
-  Plus,
-  Search,
-  ArrowUpDown,
+import { 
+  Package, 
+  Plus, 
+  Search, 
+  ArrowUpDown, 
   AlertTriangle,
   TrendingUp,
   TrendingDown,
@@ -47,12 +47,6 @@ export default function Estoque() {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // 10 itens por página
-  const [totalItems, setTotalItems] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // 10 itens por página
-  const [totalItems, setTotalItems] = useState(0);
   const [showMovimentacao, setShowMovimentacao] = useState(false);
   const [selectedProduto, setSelectedProduto] = useState<string>('');
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'saida'>('entrada');
@@ -68,10 +62,7 @@ export default function Estoque() {
 
   const fetchProdutos = async () => {
     try {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage - 1;
-
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('produtos')
         .select(`
           id,
@@ -82,14 +73,12 @@ export default function Estoque() {
           preco_custo,
           preco_venda,
           categoria:categorias(nome)
-        `, { count: 'exact' })
+        `)
         .eq('ativo', true)
-        .order('nome')
-        .range(startIndex, endIndex);
+        .order('nome');
 
       if (error) throw error;
       setProdutos(data || []);
-      setTotalItems(count || 0);
     } catch (error) {
       toast({
         title: "Erro",
@@ -345,7 +334,7 @@ export default function Estoque() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProdutos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((produto) => (
+              {filteredProdutos.map((produto) => (
                 <TableRow key={produto.id}>
                   <TableCell className="font-medium">{produto.nome}</TableCell>
                   <TableCell>{produto.codigo_interno}</TableCell>
@@ -376,29 +365,6 @@ export default function Estoque() {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Controles de Paginação */}
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Anterior
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          Página {currentPage} de {Math.ceil(totalItems / itemsPerPage)}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalItems / itemsPerPage))))}
-          disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
-        >
-          Próxima
-        </Button>
-      </div>
 
       {/* Movimentações recentes */}
       <Card>
@@ -443,4 +409,3 @@ export default function Estoque() {
     </div>
   );
 }
-
