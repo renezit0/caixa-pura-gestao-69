@@ -95,10 +95,6 @@ export default function Configuracoes() {
     }));
   };
 
-  if (loading) {
-    return <div className="p-6">Carregando configurações...</div>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
