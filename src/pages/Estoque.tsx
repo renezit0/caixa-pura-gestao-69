@@ -184,10 +184,6 @@ export default function Estoque() {
   const produtosBaixoEstoque = produtos.filter(p => p.estoque_atual <= p.estoque_minimo);
   const estoqueTotal = produtos.reduce((sum, p) => sum + (p.estoque_atual * p.preco_custo), 0);
 
-  if (loading) {
-    return <div className="p-6">Carregando...</div>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
