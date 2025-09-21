@@ -7,19 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/AuthContext'; // Add this import
+import { useAuth } from '@/components/AuthContext';
 import {
   ShoppingCart,
   Trash2,
   Plus,
   Minus,
   Search,
-  DollarSign,
-  User,
-  Percent,
   Calculator,
   CreditCard,
-  Banknote
+  Banknote,
+  Percent
 } from 'lucide-react';
 import {
   Dialog,
@@ -28,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -50,6 +47,7 @@ interface Product {
 interface CartItem extends Product {
   quantidade: number;
   subtotal: number;
+  desconto_item: number;
 }
 
 interface Cliente {
@@ -60,7 +58,7 @@ interface Cliente {
 
 const PDV = () => {
   const { toast } = useToast();
-  const { user } = useAuth(); // Add this line to get the current user
+  const { user } = useAuth();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -68,19 +66,37 @@ const PDV = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<string>('');
-  const [desconto, setDesconto] = useState(0);
-  const [senhaDesconto, setSenhaDesconto] = useState('');
-  const [mostrarDesconto, setMostrarDesconto] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Estados para busca de produto (F5)
+  const [showProductSearch, setShowProductSearch] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [searchedProducts, setSearchedProducts] = useState<Product[]>([]);
+  
+  // Estados para desconto por item
+  const [showDescontoItem, setShowDescontoItem] = useState(false);
+  const [itemDescontoId, setItemDescontoId] = useState<string>('');
+  const [senhaDesconto, setSenhaDesconto] = useState('');
+  const [valorDescontoItem, setValorDescontoItem] = useState(0);
 
   useEffect(() => {
     loadProducts();
     loadClientes();
-    // Focus no input de código de barras
-    if (barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-    }
+    
+    // Listeners para teclas F5 e F2
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'F5') {
+        e.preventDefault();
+        setShowProductSearch(true);
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        finalizarVenda();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
   const loadProducts = async () => {
@@ -112,6 +128,21 @@ const PDV = () => {
     }
   };
 
+  const searchProducts = () => {
+    if (!productSearchTerm.trim()) {
+      setSearchedProducts([]);
+      return;
+    }
+    
+    const filtered = products.filter(p => 
+      p.nome.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+      p.codigo_interno.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+      p.codigo_barras?.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+    
+    setSearchedProducts(filtered);
+  };
+
   const handleBarcodeSearch = (codigo: string) => {
     if (!codigo.trim()) return;
     
@@ -126,25 +157,6 @@ const PDV = () => {
       toast({
         title: "Produto não encontrado",
         description: `Código "${codigo}" não encontrado`,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleProductSearch = (nome: string) => {
-    if (!nome.trim()) return;
-    
-    const product = products.find(p => 
-      p.nome.toLowerCase().includes(nome.toLowerCase())
-    );
-    
-    if (product) {
-      addToCart(product);
-      setSearchTerm('');
-    } else {
-      toast({
-        title: "Produto não encontrado",
-        description: `Produto "${nome}" não encontrado`,
         variant: "destructive"
       });
     }
@@ -176,10 +188,14 @@ const PDV = () => {
       const newItem: CartItem = {
         ...product,
         quantidade: 1,
-        subtotal: product.preco_venda
+        subtotal: product.preco_venda,
+        desconto_item: 0
       };
       setCart([...cart, newItem]);
     }
+    
+    setShowProductSearch(false);
+    setProductSearchTerm('');
     
     toast({
       title: "Produto adicionado",
@@ -205,7 +221,11 @@ const PDV = () => {
 
     setCart(cart.map(item => 
       item.id === productId 
-        ? { ...item, quantidade: newQuantity, subtotal: item.preco_venda * newQuantity }
+        ? { 
+            ...item, 
+            quantidade: newQuantity, 
+            subtotal: (item.preco_venda * newQuantity) - item.desconto_item
+          }
         : item
     ));
   };
@@ -214,16 +234,7 @@ const PDV = () => {
     setCart(cart.filter(item => item.id !== productId));
   };
 
-  const getSubtotal = () => {
-    return cart.reduce((total, item) => total + item.subtotal, 0);
-  };
-
-  const getTotal = () => {
-    const subtotal = getSubtotal();
-    return subtotal - desconto;
-  };
-
-  const aplicarDesconto = () => {
+  const aplicarDescontoItem = () => {
     if (senhaDesconto !== 'abacate') {
       toast({
         title: "Senha incorreta",
@@ -233,12 +244,34 @@ const PDV = () => {
       return;
     }
     
-    setMostrarDesconto(false);
+    setCart(cart.map(item => 
+      item.id === itemDescontoId 
+        ? { 
+            ...item, 
+            desconto_item: valorDescontoItem,
+            subtotal: (item.preco_venda * item.quantidade) - valorDescontoItem
+          }
+        : item
+    ));
+    
+    setShowDescontoItem(false);
     setSenhaDesconto('');
+    setValorDescontoItem(0);
+    setItemDescontoId('');
+    
     toast({
       title: "Desconto aplicado",
-      description: `Desconto de ${formatCurrency(desconto)} aplicado`,
+      description: `Desconto de ${formatCurrency(valorDescontoItem)} aplicado`,
     });
+  };
+
+  const openDescontoItem = (itemId: string) => {
+    setItemDescontoId(itemId);
+    setShowDescontoItem(true);
+  };
+
+  const getTotal = () => {
+    return cart.reduce((total, item) => total + item.subtotal, 0);
   };
 
   const finalizarVenda = async () => {
@@ -272,14 +305,17 @@ const PDV = () => {
     setLoading(true);
 
     try {
+      const subtotal = cart.reduce((sum, item) => sum + (item.preco_venda * item.quantidade), 0);
+      const totalDescontos = cart.reduce((sum, item) => sum + item.desconto_item, 0);
+      
       // Criar venda
       const { data: venda, error: vendaError } = await supabase
         .from('vendas')
         .insert({
           cliente_id: selectedClient && selectedClient !== 'sem-cliente' ? selectedClient : null,
-          usuario_id: user.id, // Use the user ID from the auth context
-          subtotal: getSubtotal(),
-          desconto,
+          usuario_id: user.id,
+          subtotal,
+          desconto: totalDescontos,
           total: getTotal(),
           forma_pagamento: formaPagamento,
         })
@@ -294,6 +330,7 @@ const PDV = () => {
         produto_id: item.id,
         quantidade: item.quantidade,
         preco_unitario: item.preco_venda,
+        desconto_item: item.desconto_item,
         subtotal: item.subtotal,
       }));
 
@@ -306,8 +343,12 @@ const PDV = () => {
       // Limpar carrinho
       setCart([]);
       setSelectedClient('sem-cliente');
-      setDesconto(0);
       setFormaPagamento('');
+      
+      // Focar novamente no input de código
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+      }
       
       toast({
         title: "Venda finalizada!",
@@ -334,110 +375,72 @@ const PDV = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-      {/* Área de produtos e busca */}
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
+      {/* Área principal do caixa */}
+      <div className="lg:col-span-3 space-y-6">
         <Card className="card-gradient">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Search className="h-5 w-5" />
-              <span>Buscar Produtos</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calculator className="h-5 w-5" />
+                <span>PDV - Ponto de Venda</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                F5: Buscar | F2: Finalizar
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Código de Barras / Código Interno</Label>
-                <Input
-                  ref={barcodeInputRef}
-                  type="text"
-                  placeholder="Digite o código ou bipe o produto"
-                  className="barcode-input"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleBarcodeSearch(searchTerm);
-                    }
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nome do Produto</Label>
-                <Input
-                  type="text"
-                  placeholder="Digite o nome do produto"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleProductSearch(e.currentTarget.value);
-                      e.currentTarget.value = '';
-                    }
-                  }}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Código de Barras / Código Interno</Label>
+              <Input
+                ref={barcodeInputRef}
+                type="text"
+                placeholder="Digite o código ou bipe o produto"
+                className="text-lg font-mono"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleBarcodeSearch(searchTerm);
+                  }
+                }}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Lista de produtos em grid */}
-        <Card className="card-gradient">
-          <CardHeader>
-            <CardTitle>Produtos Disponíveis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-              {products.slice(0, 20).map((product) => (
-                <Card 
-                  key={product.id} 
-                  className="cursor-pointer hover:shadow-md transition-smooth border-2 hover:border-primary"
-                  onClick={() => addToCart(product)}
-                >
-                  <CardContent className="p-3">
-                    <div className="text-sm font-medium truncate">{product.nome}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Cód: {product.codigo_interno}
-                    </div>
-                    <div className="text-lg font-bold currency text-primary mt-1">
-                      {formatCurrency(product.preco_venda)}
-                    </div>
-                    <Badge variant={product.estoque_atual > 0 ? "outline" : "destructive"} className="text-xs">
-                      Est: {product.estoque_atual}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Carrinho e checkout */}
-      <div className="space-y-6">
+        {/* Lista de itens do carrinho */}
         <Card className="card-gradient">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <ShoppingCart className="h-5 w-5" />
-                <span>Carrinho</span>
+                <span>Itens da Venda</span>
               </div>
               <Badge variant="outline" className="bg-primary text-primary-foreground">
                 {cart.length} itens
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {cart.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Carrinho vazio
+                Use o leitor de código de barras ou pressione F5 para buscar produtos
               </p>
             ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.nome}</p>
+                      <p className="font-medium">{item.nome}</p>
                       <p className="text-sm text-muted-foreground">
                         {formatCurrency(item.preco_venda)} cada
+                        {item.desconto_item > 0 && (
+                          <span className="text-success ml-2">
+                            (desc: {formatCurrency(item.desconto_item)})
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -448,7 +451,7 @@ const PDV = () => {
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
-                      <span className="w-8 text-center font-mono">{item.quantidade}</span>
+                      <span className="w-12 text-center font-mono text-lg">{item.quantidade}</span>
                       <Button
                         size="sm"
                         variant="outline"
@@ -458,11 +461,21 @@ const PDV = () => {
                       </Button>
                       <Button
                         size="sm"
+                        variant="outline"
+                        onClick={() => openDescontoItem(item.id)}
+                      >
+                        <Percent className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="destructive"
                         onClick={() => removeFromCart(item.id)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="font-bold text-lg">{formatCurrency(item.subtotal)}</p>
                     </div>
                   </div>
                 ))}
@@ -470,8 +483,10 @@ const PDV = () => {
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Totais e checkout */}
+      {/* Área de checkout */}
+      <div className="lg:col-span-2 space-y-6">
         <Card className="card-gradient">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -496,58 +511,6 @@ const PDV = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Desconto */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Desconto</Label>
-                <Dialog open={mostrarDesconto} onOpenChange={setMostrarDesconto}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Percent className="h-4 w-4 mr-1" />
-                      Aplicar
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Aplicar Desconto</DialogTitle>
-                      <DialogDescription>
-                        Digite a senha para aplicar desconto
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Valor do desconto</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={desconto}
-                          onChange={(e) => setDesconto(parseFloat(e.target.value) || 0)}
-                          placeholder="0,00"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Senha para desconto</Label>
-                        <Input
-                          type="password"
-                          value={senhaDesconto}
-                          onChange={(e) => setSenhaDesconto(e.target.value)}
-                          placeholder="Digite a senha"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={aplicarDesconto}>Aplicar Desconto</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              {desconto > 0 && (
-                <div className="text-sm text-success">
-                  Desconto: {formatCurrency(desconto)}
-                </div>
-              )}
             </div>
 
             {/* Forma de pagamento */}
@@ -583,21 +546,13 @@ const PDV = () => {
 
             <Separator />
 
-            {/* Totais */}
+            {/* Total */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="currency">{formatCurrency(getSubtotal())}</span>
-              </div>
-              {desconto > 0 && (
-                <div className="flex justify-between text-success">
-                  <span>Desconto:</span>
-                  <span className="currency">-{formatCurrency(desconto)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span className="currency pdv-display">{formatCurrency(getTotal())}</span>
+              <div className="flex justify-between text-2xl font-bold">
+                <span>TOTAL:</span>
+                <span className="currency pdv-display text-primary">
+                  {formatCurrency(getTotal())}
+                </span>
               </div>
             </div>
 
@@ -605,14 +560,96 @@ const PDV = () => {
               onClick={finalizarVenda}
               disabled={cart.length === 0 || loading}
               className="w-full"
-              variant="success"
               size="lg"
             >
-              {loading ? 'Finalizando...' : 'Finalizar Venda'}
+              {loading ? 'Finalizando...' : 'Finalizar Venda (F2)'}
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog para busca de produtos (F5) */}
+      <Dialog open={showProductSearch} onOpenChange={setShowProductSearch}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Buscar Produto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite o nome, código interno ou código de barras..."
+                value={productSearchTerm}
+                onChange={(e) => setProductSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    searchProducts();
+                  }
+                }}
+                autoFocus
+              />
+              <Button onClick={searchProducts}>
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto">
+              {searchedProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer"
+                  onClick={() => addToCart(product)}
+                >
+                  <div>
+                    <p className="font-medium">{product.nome}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Código: {product.codigo_interno} | Estoque: {product.estoque_atual}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">{formatCurrency(product.preco_venda)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para desconto por item */}
+      <Dialog open={showDescontoItem} onOpenChange={setShowDescontoItem}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aplicar Desconto no Item</DialogTitle>
+            <DialogDescription>
+              Digite a senha para aplicar desconto no item
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Valor do desconto</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={valorDescontoItem}
+                onChange={(e) => setValorDescontoItem(parseFloat(e.target.value) || 0)}
+                placeholder="0,00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Senha para desconto</Label>
+              <Input
+                type="password"
+                value={senhaDesconto}
+                onChange={(e) => setSenhaDesconto(e.target.value)}
+                placeholder="Digite a senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={aplicarDescontoItem}>Aplicar Desconto</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

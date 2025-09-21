@@ -17,8 +17,7 @@ import {
   ArrowUpDown, 
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
-  Eye
+  TrendingDown
 } from 'lucide-react';
 
 interface Produto {
@@ -53,6 +52,15 @@ export default function Estoque() {
   const [quantidade, setQuantidade] = useState<number>(0);
   const [valorUnitario, setValorUnitario] = useState<number>(0);
   const [observacao, setObservacao] = useState('');
+  
+  // Estados para receber mercadoria
+  const [showReceberMercadoria, setShowReceberMercadoria] = useState(false);
+  const [searchProduto, setSearchProduto] = useState('');
+  const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
+  const [quantidadeReceber, setQuantidadeReceber] = useState<number>(0);
+  const [valorCustoReceber, setValorCustoReceber] = useState<number>(0);
+  const [observacaoReceber, setObservacaoReceber] = useState('');
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -110,6 +118,88 @@ export default function Estoque() {
       setMovimentacoes((data || []) as MovimentacaoEstoque[]);
     } catch (error) {
       console.error('Erro ao carregar movimentações:', error);
+    }
+  };
+
+  const buscarProduto = () => {
+    if (!searchProduto.trim()) return;
+    
+    const produto = produtos.find(p => 
+      p.codigo_interno.toLowerCase().includes(searchProduto.toLowerCase()) ||
+      p.nome.toLowerCase().includes(searchProduto.toLowerCase())
+    );
+    
+    if (produto) {
+      setProdutoSelecionado(produto);
+      setValorCustoReceber(produto.preco_custo);
+    } else {
+      toast({
+        title: "Produto não encontrado",
+        description: "Nenhum produto encontrado com este código ou nome",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const confirmarRecebimento = async () => {
+    if (!produtoSelecionado || !quantidadeReceber) {
+      toast({
+        title: "Erro",
+        description: "Selecione um produto e informe a quantidade",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Inserir movimentação de entrada
+      const { error: movError } = await supabase
+        .from('movimentacao_estoque')
+        .insert({
+          produto_id: produtoSelecionado.id,
+          tipo_movimentacao: 'entrada',
+          quantidade: quantidadeReceber,
+          valor_unitario: valorCustoReceber || null,
+          observacao: observacaoReceber || 'Recebimento de mercadoria'
+        });
+
+      if (movError) throw movError;
+
+      // Atualizar estoque do produto
+      const novoEstoque = produtoSelecionado.estoque_atual + quantidadeReceber;
+      
+      const { error: updateError } = await supabase
+        .from('produtos')
+        .update({ 
+          estoque_atual: novoEstoque,
+          preco_custo: valorCustoReceber // Atualizar preço de custo se informado
+        })
+        .eq('id', produtoSelecionado.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Sucesso",
+        description: `Recebimento registrado: ${quantidadeReceber} unidades`,
+      });
+
+      // Resetar form
+      setProdutoSelecionado(null);
+      setSearchProduto('');
+      setQuantidadeReceber(0);
+      setValorCustoReceber(0);
+      setObservacaoReceber('');
+      setShowReceberMercadoria(false);
+
+      // Recarregar dados
+      fetchProdutos();
+      fetchMovimentacoes();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao registrar recebimento",
+        variant: "destructive"
+      });
     }
   };
 
@@ -192,76 +282,154 @@ export default function Estoque() {
           <h1 className="text-3xl font-bold">Controle de Estoque</h1>
           <p className="text-muted-foreground">Gerencie entradas e saídas de produtos</p>
         </div>
-        <Dialog open={showMovimentacao} onOpenChange={setShowMovimentacao}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Movimentação
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Registrar Movimentação</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="produto">Produto</Label>
-                <Select value={selectedProduto} onValueChange={setSelectedProduto}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {produtos.map(produto => (
-                      <SelectItem key={produto.id} value={produto.id}>
-                        {produto.nome} - {produto.codigo_interno}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="tipo">Tipo</Label>
-                <Select value={tipoMovimentacao} onValueChange={(value: 'entrada' | 'saida') => setTipoMovimentacao(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entrada">Entrada</SelectItem>
-                    <SelectItem value="saida">Saída</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="quantidade">Quantidade</Label>
-                <Input
-                  type="number"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="valor">Valor Unitário (opcional)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={valorUnitario}
-                  onChange={(e) => setValorUnitario(Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="observacao">Observação</Label>
-                <Textarea
-                  value={observacao}
-                  onChange={(e) => setObservacao(e.target.value)}
-                  placeholder="Informações adicionais..."
-                />
-              </div>
-              <Button onClick={handleMovimentacao} className="w-full">
-                Registrar Movimentação
+        <div className="flex gap-2">
+          <Dialog open={showReceberMercadoria} onOpenChange={setShowReceberMercadoria}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Package className="w-4 h-4 mr-2" />
+                Receber Mercadoria
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Receber Mercadoria</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Digite código ou nome do produto..."
+                    value={searchProduto}
+                    onChange={(e) => setSearchProduto(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        buscarProduto();
+                      }
+                    }}
+                  />
+                  <Button onClick={buscarProduto}>
+                    <Search className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                {produtoSelecionado && (
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{produtoSelecionado.nome}</h3>
+                        <p className="text-sm text-muted-foreground">Código: {produtoSelecionado.codigo_interno}</p>
+                        <p className="text-sm text-muted-foreground">Estoque atual: {produtoSelecionado.estoque_atual}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="quantidade">Quantidade</Label>
+                        <Input
+                          type="number"
+                          value={quantidadeReceber}
+                          onChange={(e) => setQuantidadeReceber(Number(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="valor_custo">Valor de Custo</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={valorCustoReceber}
+                          onChange={(e) => setValorCustoReceber(Number(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="observacao">Observação</Label>
+                      <Textarea
+                        value={observacaoReceber}
+                        onChange={(e) => setObservacaoReceber(e.target.value)}
+                        placeholder="Informações sobre o recebimento..."
+                      />
+                    </div>
+                    
+                    <Button onClick={confirmarRecebimento} className="w-full">
+                      Confirmar Recebimento
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={showMovimentacao} onOpenChange={setShowMovimentacao}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Movimentação
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Registrar Movimentação</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="produto">Produto</Label>
+                  <Select value={selectedProduto} onValueChange={setSelectedProduto}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {produtos.map(produto => (
+                        <SelectItem key={produto.id} value={produto.id}>
+                          {produto.nome} - {produto.codigo_interno}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="tipo">Tipo</Label>
+                  <Select value={tipoMovimentacao} onValueChange={(value: 'entrada' | 'saida') => setTipoMovimentacao(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entrada">Entrada</SelectItem>
+                      <SelectItem value="saida">Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="quantidade">Quantidade</Label>
+                  <Input
+                    type="number"
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="valor">Valor Unitário (opcional)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={valorUnitario}
+                    onChange={(e) => setValorUnitario(Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="observacao">Observação</Label>
+                  <Textarea
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    placeholder="Informações adicionais..."
+                  />
+                </div>
+                <Button onClick={handleMovimentacao} className="w-full">
+                  Registrar Movimentação
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Cards de resumo */}
