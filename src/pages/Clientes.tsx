@@ -81,7 +81,7 @@ const Clientes = () => {
 
     try {
       const clientData = {
-        nome: currentClient.nome,
+        nome: currentClient.nome?.toUpperCase(),
         cpf: currentClient.cpf || null,
         email: currentClient.email || null,
         telefone: currentClient.telefone || null,

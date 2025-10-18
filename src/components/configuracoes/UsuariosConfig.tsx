@@ -80,10 +80,10 @@ export const UsuariosConfig: React.FC = () => {
       const { error } = await supabase
         .from('usuarios')
         .update({
-          nome: formData.nome,
+          nome: formData.nome.toUpperCase(),
           email: formData.email,
           username: formData.username,
-          matricula: formData.matricula,
+          matricula: formData.matricula?.toUpperCase(),
           tipo_usuario: formData.tipo_usuario,
           ...(formData.senha_desconto && { senha_desconto: formData.senha_desconto })
         })
@@ -108,10 +108,10 @@ export const UsuariosConfig: React.FC = () => {
       const { error } = await supabase
         .from('usuarios')
         .insert({
-          nome: formData.nome,
+          nome: formData.nome.toUpperCase(),
           email: formData.email,
           username: formData.username,
-          matricula: formData.matricula,
+          matricula: formData.matricula?.toUpperCase(),
           senha_desconto: formData.senha_desconto,
           tipo_usuario: formData.tipo_usuario,
           ativo: true

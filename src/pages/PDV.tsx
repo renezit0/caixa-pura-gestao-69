@@ -405,7 +405,7 @@ const PDV = () => {
     const { data: novoProduto, error } = await supabase
       .from('produtos')
       .insert({
-        nome: produtoTemp.nome,
+        nome: produtoTemp.nome.toUpperCase(),
         preco_venda: produtoTemp.preco_venda,
         preco_custo: produtoTemp.preco_custo || 0,
         estoque_atual: 1,

@@ -72,7 +72,7 @@ const Categorias = () => {
 
     try {
       const categoryData = {
-        nome: currentCategory.nome,
+        nome: currentCategory.nome?.toUpperCase(),
         descricao: currentCategory.descricao || null,
         ativo: currentCategory.ativo !== false,
       };

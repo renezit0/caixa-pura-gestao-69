@@ -142,7 +142,7 @@ const Produtos = () => {
 
     try {
       const productData = {
-        nome: currentProduct.nome,
+        nome: currentProduct.nome?.toUpperCase(),
         codigo_barras: currentProduct.codigo_barras || null,
         descricao: currentProduct.descricao || null,
         preco_custo: currentProduct.preco_custo || 0,

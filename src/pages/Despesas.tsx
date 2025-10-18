@@ -60,7 +60,7 @@ export default function Despesas() {
       const { error } = await supabase
         .from('despesas')
         .insert({
-          descricao: novaDespesa.descricao,
+          descricao: novaDespesa.descricao.toUpperCase(),
           valor: novaDespesa.valor,
           categoria: novaDespesa.categoria || null,
           data_despesa: novaDespesa.data_despesa,

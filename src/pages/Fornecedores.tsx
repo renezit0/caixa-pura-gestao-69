@@ -80,7 +80,7 @@ const Fornecedores = () => {
 
     try {
       const supplierData = {
-        nome: currentSupplier.nome,
+        nome: currentSupplier.nome?.toUpperCase(),
         cnpj: currentSupplier.cnpj || null,
         cpf: currentSupplier.cpf || null,
         email: currentSupplier.email || null,
