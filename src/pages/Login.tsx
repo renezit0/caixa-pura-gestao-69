@@ -68,18 +68,19 @@ const LoginPage = () => {
           </p>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Usuário</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Digite seu usuário"
-                required
-                className="h-11"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Usuário</Label>
+                <Input
+                  id="email"
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Digite seu usuário ou email"
+                  required
+                  className="h-11"
+                />
+                <p className="text-xs text-muted-foreground">Use GERENTE seguido do número da loja</p>
+              </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input

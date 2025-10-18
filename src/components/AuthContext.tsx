@@ -5,6 +5,7 @@ interface CustomUser {
   id: string;
   email: string;
   nome: string;
+  username?: string;
   tipo_usuario: string;
 }
 
@@ -41,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.rpc('authenticate_user', {
-        user_email: email,
+        user_identifier: email,
         user_password: password
       });
 

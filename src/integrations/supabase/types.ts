@@ -475,6 +475,7 @@ export type Database = {
           senha_desconto: string | null
           tipo_usuario: string
           updated_at: string | null
+          username: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -486,6 +487,7 @@ export type Database = {
           senha_desconto?: string | null
           tipo_usuario: string
           updated_at?: string | null
+          username?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -497,6 +499,7 @@ export type Database = {
           senha_desconto?: string | null
           tipo_usuario?: string
           updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -563,7 +566,7 @@ export type Database = {
     }
     Functions: {
       authenticate_user: {
-        Args: { user_email: string; user_password: string }
+        Args: { user_identifier: string; user_password: string }
         Returns: Json
       }
       gerar_codigo_interno: {
