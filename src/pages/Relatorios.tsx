@@ -40,6 +40,10 @@ export default function Relatorios() {
     totalVendas: 0,
     faturamentoTotal: 0,
     ticketMedio: 0,
+    custoMedio: 0,
+    faturamentoMedio: 0,
+    lucroMedio: 0,
+    lucroTotal: 0,
     totalProdutos: 0,
     totalClientes: 0,
     produtosBaixoEstoque: 0
@@ -169,6 +173,30 @@ export default function Relatorios() {
 
       if (vendasError) throw vendasError;
 
+      // Buscar itens vendidos com preço de custo
+      const { data: itensVendidos, error: itensError } = await supabase
+        .from('itens_venda')
+        .select(`
+          quantidade,
+          preco_unitario,
+          produto:produtos!inner(preco_custo),
+          venda:vendas!inner(created_at, status)
+        `)
+        .gte('venda.created_at', dataInicio.toISOString())
+        .eq('venda.status', 'finalizada');
+
+      if (itensError) throw itensError;
+
+      // Calcular custos e lucros
+      let custoTotal = 0;
+      let quantidadeItens = 0;
+      
+      itensVendidos?.forEach((item: any) => {
+        const custoItem = (item.produto?.preco_custo || 0) * item.quantidade;
+        custoTotal += custoItem;
+        quantidadeItens += item.quantidade;
+      });
+
       // Buscar contagem de produtos
       const { count: totalProdutos, error: produtosError } = await supabase
         .from('produtos')
@@ -201,11 +229,19 @@ export default function Relatorios() {
       const totalVendas = vendas.length;
       const faturamentoTotal = vendas.reduce((sum, venda) => sum + venda.total, 0);
       const ticketMedio = totalVendas > 0 ? faturamentoTotal / totalVendas : 0;
+      const custoMedio = quantidadeItens > 0 ? custoTotal / quantidadeItens : 0;
+      const faturamentoMedio = quantidadeItens > 0 ? faturamentoTotal / quantidadeItens : 0;
+      const lucroTotal = faturamentoTotal - custoTotal;
+      const lucroMedio = totalVendas > 0 ? lucroTotal / totalVendas : 0;
 
       setResumoGeral({
         totalVendas,
         faturamentoTotal,
         ticketMedio,
+        custoMedio,
+        faturamentoMedio,
+        lucroMedio,
+        lucroTotal,
         totalProdutos: totalProdutos || 0,
         totalClientes: totalClientes || 0,
         produtosBaixoEstoque: produtosBaixoEstoqueFiltrados.length
@@ -245,7 +281,7 @@ export default function Relatorios() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
@@ -259,7 +295,7 @@ export default function Relatorios() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faturamento</CardTitle>
+            <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -272,8 +308,21 @@ export default function Relatorios() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lucro Total</CardTitle>
+            <TrendingUp className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">
+              R$ {resumoGeral.lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground">Total do período</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -285,12 +334,54 @@ export default function Relatorios() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lucro Médio</CardTitle>
+            <TrendingUp className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">
+              R$ {resumoGeral.lucroMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground">Por venda</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Cards secundários */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {resumoGeral.custoMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground">Por item vendido</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Faturamento Médio</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {resumoGeral.faturamentoMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground">Por item vendido</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Produtos</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{resumoGeral.totalProdutos}</div>
-            <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
+            <p className="text-xs text-muted-foreground">Cadastrados</p>
           </CardContent>
         </Card>
 
@@ -301,18 +392,7 @@ export default function Relatorios() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{resumoGeral.totalClientes}</div>
-            <p className="text-xs text-muted-foreground">Clientes cadastrados</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Baixo Estoque</CardTitle>
-            <Package className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{resumoGeral.produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Produtos em falta</p>
+            <p className="text-xs text-muted-foreground">Cadastrados</p>
           </CardContent>
         </Card>
       </div>
