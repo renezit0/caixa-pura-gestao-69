@@ -79,7 +79,6 @@ const LoginPage = () => {
                   required
                   className="h-11"
                 />
-                <p className="text-xs text-muted-foreground">Use GERENTE seguido do número da loja</p>
               </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
