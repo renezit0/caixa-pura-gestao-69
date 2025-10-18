@@ -19,6 +19,9 @@ import {
   ShoppingCart,
   Package
 } from 'lucide-react';
+import { EmpresaConfig } from '@/components/configuracoes/EmpresaConfig';
+import { UsuariosConfig } from '@/components/configuracoes/UsuariosConfig';
+import { useAuth } from '@/components/AuthContext';
 
 interface Configuracao {
   id: string;
@@ -30,6 +33,8 @@ interface Configuracao {
 export default function Configuracoes() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.tipo_usuario === 'admin';
   
   // Configurações do banco
   const [configuracoesBD, setConfiguracoesBD] = useState<Configuracao[]>([]);
@@ -165,12 +170,18 @@ export default function Configuracoes() {
         </div>
       </div>
 
-      <Tabs defaultValue="pdv" className="space-y-6">
+      <Tabs defaultValue="empresa" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
           <TabsTrigger value="empresa">
             <Store className="w-4 h-4 mr-2" />
             Empresa
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="usuarios">
+              <Users className="w-4 h-4 mr-2" />
+              Usuários
+            </TabsTrigger>
+          )}
           <TabsTrigger value="sistema">
             <Settings className="w-4 h-4 mr-2" />
             Sistema
@@ -183,10 +194,6 @@ export default function Configuracoes() {
             <Database className="w-4 h-4 mr-2" />
             Estoque
           </TabsTrigger>
-          <TabsTrigger value="usuarios">
-            <Users className="w-4 h-4 mr-2" />
-            Usuários
-          </TabsTrigger>
           <TabsTrigger value="impressao">
             <Printer className="w-4 h-4 mr-2" />
             Impressão
@@ -195,64 +202,15 @@ export default function Configuracoes() {
 
         {/* Configurações da Empresa */}
         <TabsContent value="empresa">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações da Empresa</CardTitle>
-              <CardDescription>Configure os dados da sua empresa que aparecerão nos documentos fiscais</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="empresa_nome">Nome da Empresa</Label>
-                  <Input
-                    id="empresa_nome"
-                    value={configuracoes.empresa_nome}
-                    onChange={(e) => handleInputChange('empresa_nome', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="empresa_cnpj">CNPJ</Label>
-                  <Input
-                    id="empresa_cnpj"
-                    value={configuracoes.empresa_cnpj}
-                    onChange={(e) => handleInputChange('empresa_cnpj', e.target.value)}
-                    placeholder="00.000.000/0000-00"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="empresa_telefone">Telefone</Label>
-                  <Input
-                    id="empresa_telefone"
-                    value={configuracoes.empresa_telefone}
-                    onChange={(e) => handleInputChange('empresa_telefone', e.target.value)}
-                    placeholder="(00) 0000-0000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="empresa_email">E-mail</Label>
-                  <Input
-                    id="empresa_email"
-                    type="email"
-                    value={configuracoes.empresa_email}
-                    onChange={(e) => handleInputChange('empresa_email', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="empresa_endereco">Endereço Completo</Label>
-                <Textarea
-                  id="empresa_endereco"
-                  value={configuracoes.empresa_endereco}
-                  onChange={(e) => handleInputChange('empresa_endereco', e.target.value)}
-                  placeholder="Rua, número, bairro, cidade, estado, CEP"
-                />
-              </div>
-              <Button onClick={() => handleSave('empresa')} disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar Configurações'}
-              </Button>
-            </CardContent>
-          </Card>
+          <EmpresaConfig />
         </TabsContent>
+
+        {/* Gerenciamento de Usuários */}
+        {isAdmin && (
+          <TabsContent value="usuarios">
+            <UsuariosConfig />
+          </TabsContent>
+        )}
 
         {/* Configurações do Sistema */}
         <TabsContent value="sistema">
@@ -460,29 +418,6 @@ export default function Configuracoes() {
               <Button onClick={() => handleSave('estoque')} disabled={saving}>
                 {saving ? 'Salvando...' : 'Salvar Configurações'}
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Configurações de Usuários */}
-        <TabsContent value="usuarios">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciamento de Usuários</CardTitle>
-              <CardDescription>Configure permissões e acessos dos usuários</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Gerenciamento de Usuários</h3>
-                <p className="text-muted-foreground mb-4">
-                  Esta funcionalidade estará disponível em breve. Você poderá gerenciar usuários, 
-                  definir permissões e controlar acessos ao sistema.
-                </p>
-                <Button variant="outline" disabled>
-                  Em Desenvolvimento
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

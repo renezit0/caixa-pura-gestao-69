@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Store, ShoppingCart, Package, Users, Truck, BarChart3, Settings, Tag, History, CreditCard, TrendingUp, Receipt } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import seeStoreLogo from '@/assets/seeStore_logo.png';
 const sidebarItems = [{
   title: 'Dashboard',
   url: '/',
@@ -51,11 +53,42 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+interface Empresa {
+  nome: string;
+  logo_url: string | null;
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onClose
 }) => {
   const location = useLocation();
+  const [empresa, setEmpresa] = useState<Empresa>({ nome: 'seeStore', logo_url: null });
+
+  useEffect(() => {
+    fetchEmpresa();
+    
+    // Listen for empresa updates
+    const handleEmpresaUpdate = () => fetchEmpresa();
+    window.addEventListener('empresaUpdated', handleEmpresaUpdate);
+    
+    return () => {
+      window.removeEventListener('empresaUpdated', handleEmpresaUpdate);
+    };
+  }, []);
+
+  const fetchEmpresa = async () => {
+    const { data } = await supabase
+      .from('empresa')
+      .select('nome, logo_url')
+      .limit(1)
+      .single();
+    
+    if (data) {
+      setEmpresa(data);
+    }
+  };
   return <>
       {/* Mobile overlay */}
       {isOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden" onClick={onClose} />}
@@ -65,11 +98,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex items-center space-x-3 px-6 py-6 border-b border-border">
-            <div className="bg-primary rounded-lg p-2">
-              <Store className="h-6 w-6 text-primary-foreground" />
-            </div>
+            {empresa.logo_url ? (
+              <img 
+                src={empresa.logo_url} 
+                alt={empresa.nome} 
+                className="h-10 w-10 object-contain rounded-lg"
+              />
+            ) : (
+              <div className="bg-primary rounded-lg p-2">
+                <Store className="h-6 w-6 text-primary-foreground" />
+              </div>
+            )}
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">seeStore</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">
+                {empresa.nome}
+              </h1>
               <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
             </div>
           </div>
