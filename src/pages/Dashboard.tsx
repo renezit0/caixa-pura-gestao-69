@@ -50,12 +50,14 @@ const Dashboard = () => {
       // Buscar produtos
       const { data: produtos } = await supabase
         .from('produtos')
-        .select('id, estoque_atual, estoque_minimo, preco_venda');
+        .select('id, estoque_atual, estoque_minimo, preco_venda')
+        .eq('ativo', true);
 
       // Buscar clientes
       const { data: clientes } = await supabase
         .from('clientes')
-        .select('id');
+        .select('id')
+        .eq('ativo', true);
 
       const hoje = new Date().toISOString().split('T')[0];
       const vendasHoje = vendas?.filter(v => v.created_at.startsWith(hoje)) || [];
