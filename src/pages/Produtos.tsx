@@ -94,7 +94,7 @@ const Produtos = () => {
       .from('configuracoes')
       .select('*')
       .eq('chave', 'exibir_produtos_temporarios')
-      .single();
+      .maybeSingle();
 
     if (data) {
       setExibirProdutosTemporarios(data.valor);

@@ -115,7 +115,7 @@ const PDV = () => {
       .from('configuracoes')
       .select('*')
       .eq('chave', 'venda_sem_cadastro')
-      .single();
+      .maybeSingle();
 
     if (data) {
       setVendaSemCadastro(data.valor);
