@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Package,
   Plus,
@@ -73,28 +75,39 @@ interface Fornecedor {
 
 const Produtos = () => {
   const { toast } = useToast();
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Produto>>({});
   const [loading, setLoading] = useState(false);
-  const [exibirProdutosTemporarios, setExibirProdutosTemporarios] = useState(false);
+  const [exibirProdutosTemporarios, setExibirProdutosTemporarios] = useState<boolean | undefined>(undefined);
+
+  const { data: categorias = [] } = useSupabaseQuery<Categoria>(
+    ['categorias'],
+    async () => await supabase.from('categorias').select('id, nome').eq('ativo', true).order('nome')
+  );
+
+  const { data: fornecedores = [] } = useSupabaseQuery<Fornecedor>(
+    ['fornecedores'],
+    async () => await supabase.from('fornecedores').select('id, nome').eq('ativo', true).order('nome')
+  );
+
+  const { data: produtos = [], isLoading, refetch: refetchProdutos } = useSupabaseQuery<Produto>(
+    ['produtos', String(exibirProdutosTemporarios)],
+    async () => {
+      let query = supabase.from('produtos').select('*');
+      if (!exibirProdutosTemporarios) {
+        query = query.eq('produto_temporario', false);
+      }
+      return await query.order('nome');
+    },
+    { enabled: exibirProdutosTemporarios !== undefined }
+  );
 
   useEffect(() => {
     loadConfiguracoes();
-    loadCategorias();
-    loadFornecedores();
   }, []);
-
-  useEffect(() => {
-    // Só carrega produtos depois que a configuração foi carregada
-    if (exibirProdutosTemporarios !== undefined) {
-      loadProdutos();
-    }
-  }, [exibirProdutosTemporarios]);
 
   const loadConfiguracoes = async () => {
     const { data } = await supabase
@@ -103,54 +116,7 @@ const Produtos = () => {
       .eq('chave', 'exibir_produtos_temporarios')
       .maybeSingle();
 
-    if (data) {
-      setExibirProdutosTemporarios(data.valor);
-    }
-  };
-
-  const loadProdutos = async () => {
-    setLoading(true);
-    let query = supabase
-      .from('produtos')
-      .select('*');
-
-    // Filtrar produtos temporários se a configuração estiver desabilitada
-    if (!exibirProdutosTemporarios) {
-      query = query.eq('produto_temporario', false);
-    }
-
-    const { data, error } = await query.order('nome');
-      
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar produtos",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-    
-    setProdutos(data || []);
-    setLoading(false);
-  };
-
-  const loadCategorias = async () => {
-    const { data } = await supabase
-      .from('categorias')
-      .select('id, nome')
-      .eq('ativo', true)
-      .order('nome');
-    setCategorias(data || []);
-  };
-
-  const loadFornecedores = async () => {
-    const { data } = await supabase
-      .from('fornecedores')
-      .select('id, nome')
-      .eq('ativo', true)
-      .order('nome');
-    setFornecedores(data || []);
+    setExibirProdutosTemporarios(data?.valor ?? false);
   };
 
   const handleSave = async () => {
@@ -212,7 +178,7 @@ const Produtos = () => {
         });
       }
 
-      loadProdutos();
+      refetchProdutos();
       handleCloseDialog();
 
     } catch (error) {
@@ -255,7 +221,7 @@ const Produtos = () => {
       description: "Produto excluído com sucesso",
     });
 
-    loadProdutos();
+    refetchProdutos();
   };
 
   const handleCloseDialog = () => {
@@ -520,7 +486,7 @@ const Produtos = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {isLoading ? (
                   <TableSkeleton rows={5} columns={6} />
                 ) : filteredProdutos.length === 0 ? (
                   <TableRow>

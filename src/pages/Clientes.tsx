@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import {
   Users,
   Plus,
@@ -53,37 +54,16 @@ interface Cliente {
 
 const Clientes = () => {
   const { toast } = useToast();
-  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentClient, setCurrentClient] = useState<Partial<Cliente>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadClientes();
-  }, []);
-
-  const loadClientes = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .order('nome');
-      
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar clientes",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-    
-    setClientes(data || []);
-    setLoading(false);
-  };
+  const { data: clientes = [], isLoading, refetch } = useSupabaseQuery<Cliente>(
+    ['clientes'],
+    async () => await supabase.from('clientes').select('*').order('nome')
+  );
 
   const handleSave = async () => {
     if (!currentClient.nome) {
@@ -136,7 +116,7 @@ const Clientes = () => {
         });
       }
 
-      loadClientes();
+      refetch();
       handleCloseDialog();
 
     } catch (error) {
@@ -179,7 +159,7 @@ const Clientes = () => {
       description: "Cliente excluído com sucesso",
     });
 
-    loadClientes();
+    refetch();
   };
 
   const handleCloseDialog = () => {
@@ -373,7 +353,7 @@ const Clientes = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {isLoading ? (
                   <TableSkeleton rows={5} columns={5} />
                 ) : filteredClientes.length === 0 ? (
                   <TableRow>

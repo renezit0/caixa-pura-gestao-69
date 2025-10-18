@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import {
   Tag,
   Plus,
@@ -44,37 +45,16 @@ interface Categoria {
 
 const Categorias = () => {
   const { toast } = useToast();
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Partial<Categoria>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadCategorias();
-  }, []);
-
-  const loadCategorias = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('categorias')
-      .select('*')
-      .order('nome');
-      
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar categorias",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-    
-    setCategorias(data || []);
-    setLoading(false);
-  };
+  const { data: categorias = [], isLoading, refetch } = useSupabaseQuery<Categoria>(
+    ['categorias-list'],
+    async () => await supabase.from('categorias').select('*').order('nome')
+  );
 
   const handleSave = async () => {
     if (!currentCategory.nome) {
@@ -120,7 +100,7 @@ const Categorias = () => {
         });
       }
 
-      loadCategorias();
+      refetch();
       handleCloseDialog();
 
     } catch (error) {
@@ -163,7 +143,7 @@ const Categorias = () => {
       description: "Categoria excluída com sucesso",
     });
 
-    loadCategorias();
+    refetch();
   };
 
   const handleCloseDialog = () => {
@@ -280,7 +260,7 @@ const Categorias = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {isLoading ? (
                   <TableSkeleton rows={5} columns={5} />
                 ) : filteredCategorias.length === 0 ? (
                   <TableRow>
