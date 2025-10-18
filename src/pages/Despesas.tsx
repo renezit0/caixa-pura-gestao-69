@@ -10,8 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Trash2, Search, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Search, DollarSign, Calendar } from 'lucide-react';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { ResponsiveList } from '@/components/ui/responsive-list';
+import { Badge } from '@/components/ui/badge';
 
 interface Despesa {
   id: string;
@@ -142,7 +144,7 @@ export default function Despesas() {
               Nova Despesa
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[90vw]">
             <DialogHeader>
               <DialogTitle>Cadastrar Despesa</DialogTitle>
             </DialogHeader>
@@ -235,54 +237,93 @@ export default function Despesas() {
           <CardDescription>Todas as despesas cadastradas</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Observações</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeleton rows={5} columns={6} />
-              ) : filteredDespesas.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Nenhuma despesa encontrada
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredDespesas.map((despesa) => (
-                  <TableRow key={despesa.id}>
-                    <TableCell>
-                      {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell className="font-medium">{despesa.descricao}</TableCell>
-                    <TableCell>{despesa.categoria || '-'}</TableCell>
-                    <TableCell className="text-right text-destructive">
+          {loading ? (
+            <div className="text-center py-8">Carregando...</div>
+          ) : filteredDespesas.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhuma despesa encontrada
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredDespesas}
+              renderCard={(despesa) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold">{despesa.descricao}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-lg font-bold text-destructive">
                       R$ {despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {despesa.observacoes || '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(despesa.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                    </p>
+                  </div>
+
+                  {despesa.categoria && (
+                    <Badge variant="outline">{despesa.categoria}</Badge>
+                  )}
+
+                  {despesa.observacoes && (
+                    <p className="text-sm text-muted-foreground">{despesa.observacoes}</p>
+                  )}
+
+                  <div className="flex justify-end pt-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(despesa.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
               )}
-            </TableBody>
-          </Table>
+              renderTable={() => (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Observações</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDespesas.map((despesa) => (
+                      <TableRow key={despesa.id}>
+                        <TableCell>
+                          {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="font-medium">{despesa.descricao}</TableCell>
+                        <TableCell>{despesa.categoria || '-'}</TableCell>
+                        <TableCell className="text-right text-destructive">
+                          R$ {despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {despesa.observacoes || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(despesa.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

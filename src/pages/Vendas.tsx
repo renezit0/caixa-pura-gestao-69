@@ -19,6 +19,7 @@ import {
   Users,
   Package
 } from 'lucide-react';
+import { ResponsiveList } from '@/components/ui/responsive-list';
 
 interface Venda {
   id: string;
@@ -216,72 +217,140 @@ export default function Vendas() {
           <CardDescription>Histórico completo das vendas realizadas</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Número</TableHead>
-                  <TableHead className="whitespace-nowrap">Data/Hora</TableHead>
-                  <TableHead className="whitespace-nowrap hidden md:table-cell">Cliente</TableHead>
-                  <TableHead className="whitespace-nowrap hidden lg:table-cell">Pagamento</TableHead>
-                  <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Subtotal</TableHead>
-                  <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Desconto</TableHead>
-                  <TableHead className="text-right whitespace-nowrap">Total</TableHead>
-                  <TableHead className="whitespace-nowrap">Status</TableHead>
-                  <TableHead className="whitespace-nowrap">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-            <TableBody>
-              {filteredVendas.map((venda) => (
-                <TableRow key={venda.id}>
-                  <TableCell className="font-medium whitespace-nowrap">#{venda.numero_venda}</TableCell>
-                  <TableCell className="whitespace-nowrap text-xs lg:text-sm">
-                    {new Date(venda.created_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{venda.cliente?.nome || 'Não informado'}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Badge variant="outline" className="text-xs">
-                      {venda.forma_pagamento || 'Não informado'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
-                    R$ {venda.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
-                    R$ {venda.desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell className="text-right font-medium whitespace-nowrap text-xs lg:text-sm">
-                    R$ {venda.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={venda.status === 'finalizada' ? 'default' : 'destructive'}
-                      className="text-xs"
-                    >
+          {filteredVendas.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhuma venda encontrada
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredVendas}
+              renderCard={(venda) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold">Venda #{venda.numero_venda}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(venda.created_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      {venda.cliente?.nome && (
+                        <p className="text-sm text-muted-foreground">{venda.cliente.nome}</p>
+                      )}
+                    </div>
+                    <Badge variant={venda.status === 'finalizada' ? 'default' : 'destructive'}>
                       {venda.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <p className="font-medium">R$ {venda.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Desconto:</span>
+                      <p className="font-medium">R$ {venda.desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div>
+                      <span className="text-muted-foreground text-sm">Total:</span>
+                      <p className="text-lg font-bold">
+                        R$ {venda.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleVerDetalhes(venda)}
-                      className="h-8 w-8 p-0"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            </Table>
-          </div>
+                  </div>
+
+                  {venda.forma_pagamento && (
+                    <Badge variant="outline" className="text-xs">
+                      {venda.forma_pagamento}
+                    </Badge>
+                  )}
+                </div>
+              )}
+              renderTable={() => (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">Número</TableHead>
+                        <TableHead className="whitespace-nowrap">Data/Hora</TableHead>
+                        <TableHead className="whitespace-nowrap hidden md:table-cell">Cliente</TableHead>
+                        <TableHead className="whitespace-nowrap hidden lg:table-cell">Pagamento</TableHead>
+                        <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Subtotal</TableHead>
+                        <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Desconto</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="whitespace-nowrap">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredVendas.map((venda) => (
+                        <TableRow key={venda.id}>
+                          <TableCell className="font-medium whitespace-nowrap">#{venda.numero_venda}</TableCell>
+                          <TableCell className="whitespace-nowrap text-xs lg:text-sm">
+                            {new Date(venda.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{venda.cliente?.nome || 'Não informado'}</TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <Badge variant="outline" className="text-xs">
+                              {venda.forma_pagamento || 'Não informado'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
+                            R$ {venda.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
+                            R$ {venda.desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className="text-right font-medium whitespace-nowrap text-xs lg:text-sm">
+                            R$ {venda.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={venda.status === 'finalizada' ? 'default' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {venda.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleVerDetalhes(venda)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
 

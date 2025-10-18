@@ -22,6 +22,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { ResponsiveList } from '@/components/ui/responsive-list';
 
 interface Produto {
   id: string;
@@ -294,7 +295,7 @@ export default function Estoque() {
                 Receber Mercadoria
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl sm:max-w-[90vw]">
               <DialogHeader>
                 <DialogTitle>Receber Mercadoria</DialogTitle>
               </DialogHeader>
@@ -370,7 +371,7 @@ export default function Estoque() {
                 Nova Movimentação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl sm:max-w-[90vw]">
               <DialogHeader>
                 <DialogTitle>Registrar Movimentação</DialogTitle>
               </DialogHeader>
@@ -508,57 +509,98 @@ export default function Estoque() {
           <CardDescription>Lista completa dos produtos e seus estoques</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead>Código</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Estoque Atual</TableHead>
-                <TableHead className="text-right">Estoque Mínimo</TableHead>
-                <TableHead className="text-right">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeleton rows={5} columns={6} />
-              ) : filteredProdutos.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Nenhum produto encontrado
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredProdutos.map((produto) => (
-                  <TableRow key={produto.id}>
-                    <TableCell className="font-medium">{produto.nome}</TableCell>
-                    <TableCell>{produto.codigo_interno}</TableCell>
-                    <TableCell>{produto.categoria?.nome || 'Sem categoria'}</TableCell>
-                    <TableCell className="text-right">{produto.estoque_atual}</TableCell>
-                    <TableCell className="text-right">{produto.estoque_minimo}</TableCell>
-                    <TableCell className="text-right">
-                      {produto.estoque_atual <= produto.estoque_minimo ? (
-                        <Badge variant="destructive">
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          Baixo
-                        </Badge>
-                      ) : produto.estoque_atual <= produto.estoque_minimo * 2 ? (
-                        <Badge variant="secondary">
-                          <ArrowUpDown className="w-3 h-3 mr-1" />
-                          Atenção
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-success text-success-foreground">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          Normal
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+          {loading ? (
+            <div className="text-center py-8">Carregando...</div>
+          ) : filteredProdutos.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhum produto encontrado
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredProdutos}
+              renderCard={(produto) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold">{produto.nome}</p>
+                      <p className="text-sm text-muted-foreground">Código: {produto.codigo_interno}</p>
+                      <p className="text-sm text-muted-foreground">{produto.categoria?.nome || 'Sem categoria'}</p>
+                    </div>
+                    {produto.estoque_atual <= produto.estoque_minimo ? (
+                      <Badge variant="destructive">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Baixo
+                      </Badge>
+                    ) : produto.estoque_atual <= produto.estoque_minimo * 2 ? (
+                      <Badge variant="secondary">
+                        <ArrowUpDown className="w-3 h-3 mr-1" />
+                        Atenção
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-success text-success-foreground">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        Normal
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
+                    <div>
+                      <span className="text-muted-foreground">Estoque Atual:</span>
+                      <p className="font-semibold">{produto.estoque_atual}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Estoque Mínimo:</span>
+                      <p className="font-semibold">{produto.estoque_minimo}</p>
+                    </div>
+                  </div>
+                </div>
               )}
-            </TableBody>
-          </Table>
+              renderTable={() => (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-right">Estoque Atual</TableHead>
+                      <TableHead className="text-right">Estoque Mínimo</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProdutos.map((produto) => (
+                      <TableRow key={produto.id}>
+                        <TableCell className="font-medium">{produto.nome}</TableCell>
+                        <TableCell>{produto.codigo_interno}</TableCell>
+                        <TableCell>{produto.categoria?.nome || 'Sem categoria'}</TableCell>
+                        <TableCell className="text-right">{produto.estoque_atual}</TableCell>
+                        <TableCell className="text-right">{produto.estoque_minimo}</TableCell>
+                        <TableCell className="text-right">
+                          {produto.estoque_atual <= produto.estoque_minimo ? (
+                            <Badge variant="destructive">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Baixo
+                            </Badge>
+                          ) : produto.estoque_atual <= produto.estoque_minimo * 2 ? (
+                            <Badge variant="secondary">
+                              <ArrowUpDown className="w-3 h-3 mr-1" />
+                              Atenção
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-success text-success-foreground">
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              Normal
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -569,22 +611,22 @@ export default function Estoque() {
           <CardDescription>Últimas 50 movimentações de estoque</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Quantidade</TableHead>
-                <TableHead>Observação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {movimentacoes.map((mov) => (
-                <TableRow key={mov.id}>
-                  <TableCell>{new Date(mov.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{mov.produto?.nome}</TableCell>
-                  <TableCell>
+          {movimentacoes.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhuma movimentação encontrada
+            </div>
+          ) : (
+            <ResponsiveList
+              data={movimentacoes}
+              renderCard={(mov) => (
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold">{mov.produto?.nome}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(mov.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
                     <Badge variant={mov.tipo_movimentacao === 'entrada' ? 'default' : 'secondary'}>
                       {mov.tipo_movimentacao === 'entrada' ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -593,13 +635,51 @@ export default function Estoque() {
                       )}
                       {mov.tipo_movimentacao}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{mov.quantidade}</TableCell>
-                  <TableCell>{mov.observacao || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Quantidade:</span>
+                    <span className="font-semibold">{mov.quantidade}</span>
+                  </div>
+                  {mov.observacao && (
+                    <p className="text-sm text-muted-foreground">{mov.observacao}</p>
+                  )}
+                </div>
+              )}
+              renderTable={() => (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead className="text-right">Quantidade</TableHead>
+                      <TableHead>Observação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movimentacoes.map((mov) => (
+                      <TableRow key={mov.id}>
+                        <TableCell>{new Date(mov.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>{mov.produto?.nome}</TableCell>
+                        <TableCell>
+                          <Badge variant={mov.tipo_movimentacao === 'entrada' ? 'default' : 'secondary'}>
+                            {mov.tipo_movimentacao === 'entrada' ? (
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                            ) : (
+                              <TrendingDown className="w-3 h-3 mr-1" />
+                            )}
+                            {mov.tipo_movimentacao}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{mov.quantidade}</TableCell>
+                        <TableCell>{mov.observacao || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
