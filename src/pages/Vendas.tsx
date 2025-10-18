@@ -119,17 +119,17 @@ export default function Vendas() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Vendas</h1>
-          <p className="text-muted-foreground">Acompanhe as vendas e faturamento</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Vendas</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Acompanhe as vendas e faturamento</p>
         </div>
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Vendas Hoje</CardTitle>
@@ -177,17 +177,17 @@ export default function Vendas() {
 
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-1">
           <Search className="w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por número, cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
+            className="w-full"
           />
         </div>
         <Select value={filtroData} onValueChange={setFiltroData}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -198,7 +198,7 @@ export default function Vendas() {
           </SelectContent>
         </Select>
         <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -216,51 +216,53 @@ export default function Vendas() {
           <CardDescription>Histórico completo das vendas realizadas</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Pagamento</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead className="text-right">Desconto</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="whitespace-nowrap">Número</TableHead>
+                  <TableHead className="whitespace-nowrap">Data/Hora</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Cliente</TableHead>
+                  <TableHead className="whitespace-nowrap hidden lg:table-cell">Pagamento</TableHead>
+                  <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Subtotal</TableHead>
+                  <TableHead className="text-right whitespace-nowrap hidden lg:table-cell">Desconto</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {filteredVendas.map((venda) => (
                 <TableRow key={venda.id}>
-                  <TableCell className="font-medium">#{venda.numero_venda}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">#{venda.numero_venda}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs lg:text-sm">
                     {new Date(venda.created_at).toLocaleDateString('pt-BR', {
                       day: '2-digit',
                       month: '2-digit',
-                      year: 'numeric',
+                      year: '2-digit',
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
                   </TableCell>
-                  <TableCell>{venda.cliente?.nome || 'Cliente não informado'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
+                  <TableCell className="hidden md:table-cell">{venda.cliente?.nome || 'Não informado'}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <Badge variant="outline" className="text-xs">
                       {venda.forma_pagamento || 'Não informado'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
                     R$ {venda.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden lg:table-cell text-xs lg:text-sm">
                     R$ {venda.desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium whitespace-nowrap text-xs lg:text-sm">
                     R$ {venda.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell>
                     <Badge 
                       variant={venda.status === 'finalizada' ? 'default' : 'destructive'}
+                      className="text-xs"
                     >
                       {venda.status}
                     </Badge>
@@ -270,6 +272,7 @@ export default function Vendas() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleVerDetalhes(venda)}
+                      className="h-8 w-8 p-0"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -277,7 +280,8 @@ export default function Vendas() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

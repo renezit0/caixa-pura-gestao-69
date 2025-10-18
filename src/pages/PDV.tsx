@@ -284,26 +284,9 @@ const PDV = () => {
   };
 
   const addToCart = (product: Product) => {
-    if (product.estoque_atual <= 0) {
-      toast({
-        title: "Estoque insuficiente",
-        description: `Produto "${product.nome}" sem estoque`,
-        variant: "destructive"
-      });
-      return;
-    }
-
     const existingItem = cart.find(item => item.id === product.id);
     
     if (existingItem) {
-      if (existingItem.quantidade >= product.estoque_atual) {
-        toast({
-          title: "Estoque insuficiente",
-          description: `Estoque disponível: ${product.estoque_atual}`,
-          variant: "destructive"
-        });
-        return;
-      }
       updateQuantity(product.id, existingItem.quantidade + 1);
     } else {
       const newItem: CartItem = {
@@ -330,17 +313,7 @@ const PDV = () => {
       return;
     }
 
-    const product = products.find(p => p.id === productId);
-    if (product && newQuantity > product.estoque_atual) {
-      toast({
-        title: "Estoque insuficiente",
-        description: `Estoque disponível: ${product.estoque_atual}`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setCart(cart.map(item => 
+    setCart(cart.map(item =>
       item.id === productId 
         ? { 
             ...item, 
@@ -567,9 +540,9 @@ const PDV = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 h-full p-2 lg:p-0">
       {/* Área principal do caixa */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="lg:col-span-3 space-y-4 lg:space-y-6">
         <Card className="card-gradient">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -592,9 +565,12 @@ const PDV = () => {
                 className="text-lg font-mono"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    e.preventDefault();
                     handleBarcodeSearch(searchTerm);
+                  } else if (e.key === 'Tab' && !e.shiftKey) {
+                    // Tab normal vai para o próximo campo naturalmente
                   }
                 }}
               />
@@ -621,12 +597,12 @@ const PDV = () => {
                 Use o leitor de código de barras ou pressione F5 para buscar produtos
               </p>
             ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-2 lg:space-y-3 max-h-96 overflow-y-auto">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{item.nome}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={item.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 lg:p-4 bg-muted/50 rounded-lg gap-3">
+                    <div className="flex-1 min-w-0 w-full lg:w-auto">
+                      <p className="font-medium text-sm lg:text-base">{item.nome}</p>
+                      <p className="text-xs lg:text-sm text-muted-foreground">
                         {formatCurrency(item.preco_venda)} cada
                         {item.desconto_item > 0 && (
                           <span className="text-success ml-2">
@@ -635,39 +611,47 @@ const PDV = () => {
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(item.id, item.quantidade - 1)}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-12 text-center font-mono text-lg">{item.quantidade}</span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(item.id, item.quantidade + 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openDescontoItem(item.id)}
-                      >
-                        <Percent className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="font-bold text-lg">{formatCurrency(item.subtotal)}</p>
+                    <div className="flex items-center justify-between lg:justify-start w-full lg:w-auto gap-2">
+                      <div className="flex items-center space-x-1 lg:space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantidade - 1)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 lg:w-12 text-center font-mono text-base lg:text-lg">{item.quantidade}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantidade + 1)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center space-x-1 lg:space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openDescontoItem(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Percent className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="text-right lg:ml-4">
+                        <p className="font-bold text-base lg:text-lg">{formatCurrency(item.subtotal)}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -678,7 +662,7 @@ const PDV = () => {
       </div>
 
       {/* Área de checkout */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-4 lg:space-y-6">
         <Card className="card-gradient">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">

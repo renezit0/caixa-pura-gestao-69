@@ -97,18 +97,18 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 lg:mt-2 text-sm lg:text-base">
             Visão geral do seu negócio em tempo real
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => navigate('/pdv')} variant="hero" size="lg">
-            <ShoppingCart className="h-5 w-5" />
+        <div className="flex space-x-2 w-full lg:w-auto">
+          <Button onClick={() => navigate('/pdv')} variant="hero" size="lg" className="flex-1 lg:flex-none">
+            <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
             Abrir PDV
           </Button>
         </div>
@@ -133,7 +133,7 @@ const Dashboard = () => {
       )}
 
       {/* Cards de estatísticas */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card className="card-gradient">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Vendas Hoje</CardTitle>
@@ -196,7 +196,7 @@ const Dashboard = () => {
       </div>
 
       {/* Cards de ações rápidas */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card className="card-gradient hover:shadow-lg transition-smooth">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">

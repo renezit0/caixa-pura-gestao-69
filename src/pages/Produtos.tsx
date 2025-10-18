@@ -265,12 +265,12 @@ const Produtos = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie seu catálogo de produtos</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Produtos</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Gerencie seu catálogo de produtos</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -278,7 +278,7 @@ const Produtos = () => {
             <Button onClick={() => {
               setCurrentProduct({});
               setIsEditing(false);
-            }} className="hero-gradient glow-effect">
+            }} className="hero-gradient glow-effect w-full lg:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Novo Produto
             </Button>
