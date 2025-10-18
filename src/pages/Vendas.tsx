@@ -287,7 +287,7 @@ export default function Vendas() {
 
       {/* Dialog de detalhes da venda */}
       <Dialog open={showDetalhes} onOpenChange={setShowDetalhes}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl sm:max-w-[90vw]">
           <DialogHeader>
             <DialogTitle>Detalhes da Venda #{selectedVenda?.numero_venda}</DialogTitle>
           </DialogHeader>

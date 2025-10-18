@@ -45,6 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ResponsiveList } from '@/components/ui/responsive-list';
 
 interface Produto {
   id: string;
@@ -283,7 +284,7 @@ const Produtos = () => {
               Novo Produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[90vw]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? 'Editar Produto' : 'Novo Produto'}
@@ -483,112 +484,184 @@ const Produtos = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Estoque</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableSkeleton rows={5} columns={6} />
-                ) : filteredProdutos.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold">Nenhum produto encontrado</h3>
-                      <p className="text-muted-foreground">
-                        {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece adicionando um novo produto'}
+          {isLoading ? (
+            <div className="text-center py-8">Carregando...</div>
+          ) : filteredProdutos.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold">Nenhum produto encontrado</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece adicionando um novo produto'}
+              </p>
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredProdutos}
+              renderCard={(produto) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      {produto.imagem_url ? (
+                        <img 
+                          src={produto.imagem_url} 
+                          alt={produto.nome}
+                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{produto.nome}</p>
+                        <p className="text-sm text-muted-foreground font-mono">{produto.codigo_interno}</p>
+                      </div>
+                    </div>
+                    <Badge variant={produto.ativo ? "default" : "destructive"}>
+                      {produto.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Categoria:</span>
+                      <p className="font-medium">{getCategoriaName(produto.categoria_id)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Estoque:</span>
+                      <p className={`font-semibold ${produto.estoque_atual <= produto.estoque_minimo ? 'text-warning flex items-center gap-1' : ''}`}>
+                        {produto.estoque_atual}
+                        {produto.estoque_atual <= produto.estoque_minimo && (
+                          <AlertTriangle className="h-3 w-3" />
+                        )}
                       </p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredProdutos.map((produto) => (
-                    <TableRow key={produto.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          {produto.imagem_url ? (
-                            <img 
-                              src={produto.imagem_url} 
-                              alt={produto.nome}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                              <Package className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Preço Venda:</span>
+                      <p className="font-semibold currency">{formatCurrency(produto.preco_venda)}</p>
+                    </div>
+                    {produto.preco_custo > 0 && (
+                      <div>
+                        <span className="text-muted-foreground">Custo:</span>
+                        <p className="font-medium text-sm">{formatCurrency(produto.preco_custo)}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end space-x-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(produto)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(produto.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              renderTable={() => (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Categoria</TableHead>
+                        <TableHead>Preço</TableHead>
+                        <TableHead>Estoque</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProdutos.map((produto) => (
+                        <TableRow key={produto.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              {produto.imagem_url ? (
+                                <img 
+                                  src={produto.imagem_url} 
+                                  alt={produto.nome}
+                                  className="w-10 h-10 rounded-lg object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                                  <Package className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium">{produto.nome}</p>
+                                <p className="text-sm text-muted-foreground">{produto.unidade_medida}</p>
+                              </div>
                             </div>
-                          )}
-                          <div>
-                            <p className="font-medium">{produto.nome}</p>
-                            <p className="text-sm text-muted-foreground">{produto.unidade_medida}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-mono">{produto.codigo_interno}</p>
-                          {produto.codigo_barras && (
-                            <p className="text-xs text-muted-foreground font-mono">{produto.codigo_barras}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getCategoriaName(produto.categoria_id)}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold currency">{formatCurrency(produto.preco_venda)}</p>
-                          {produto.preco_custo > 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              Custo: {formatCurrency(produto.preco_custo)}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <span className={`font-semibold ${produto.estoque_atual <= produto.estoque_minimo ? 'text-warning' : 'text-foreground'}`}>
-                            {produto.estoque_atual}
-                          </span>
-                          {produto.estoque_atual <= produto.estoque_minimo && (
-                            <AlertTriangle className="h-4 w-4 text-warning" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={produto.ativo ? "default" : "destructive"}>
-                          {produto.ativo ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(produto)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(produto.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-mono">{produto.codigo_interno}</p>
+                              {produto.codigo_barras && (
+                                <p className="text-xs text-muted-foreground font-mono">{produto.codigo_barras}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{getCategoriaName(produto.categoria_id)}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-semibold currency">{formatCurrency(produto.preco_venda)}</p>
+                              {produto.preco_custo > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  Custo: {formatCurrency(produto.preco_custo)}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <span className={`font-semibold ${produto.estoque_atual <= produto.estoque_minimo ? 'text-warning' : 'text-foreground'}`}>
+                                {produto.estoque_atual}
+                              </span>
+                              {produto.estoque_atual <= produto.estoque_minimo && (
+                                <AlertTriangle className="h-4 w-4 text-warning" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={produto.ativo ? "default" : "destructive"}>
+                              {produto.ativo ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(produto)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(produto.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

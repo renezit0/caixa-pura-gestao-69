@@ -37,6 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ResponsiveList } from '@/components/ui/responsive-list';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Cliente {
   id: string;
@@ -56,6 +58,7 @@ interface Cliente {
 const Clientes = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -200,7 +203,7 @@ const Clientes = () => {
               Novo Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[90vw]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? 'Editar Cliente' : 'Novo Cliente'}
@@ -344,108 +347,174 @@ const Clientes = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableSkeleton rows={5} columns={5} />
-                ) : filteredClientes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold">Nenhum cliente encontrado</h3>
-                      <p className="text-muted-foreground">
-                        {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece cadastrando seu primeiro cliente'}
-                      </p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredClientes.map((cliente) => (
-                    <TableRow key={cliente.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{cliente.nome}</p>
-                            {cliente.cpf && (
-                              <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {cliente.email && (
-                            <div className="flex items-center space-x-2">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-sm">{cliente.email}</span>
+          {isLoading ? (
+            <div className="text-center py-8">Carregando...</div>
+          ) : filteredClientes.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold">Nenhum cliente encontrado</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece cadastrando seu primeiro cliente'}
+              </p>
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredClientes}
+              renderCard={(cliente) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{cliente.nome}</p>
+                        {cliente.cpf && (
+                          <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant={cliente.ativo ? "default" : "destructive"}>
+                      {cliente.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {cliente.email && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{cliente.email}</span>
+                      </div>
+                    )}
+                    {cliente.telefone && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{cliente.telefone}</span>
+                      </div>
+                    )}
+                    {cliente.cidade && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{cliente.cidade}/{cliente.estado}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(cliente)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(cliente.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              renderTable={() => (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Contato</TableHead>
+                        <TableHead>Localização</TableHead>
+                        <TableHead>Cadastro</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredClientes.map((cliente) => (
+                        <TableRow key={cliente.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{cliente.nome}</p>
+                                {cliente.cpf && (
+                                  <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
+                                )}
+                              </div>
                             </div>
-                          )}
-                          {cliente.telefone && (
-                            <div className="flex items-center space-x-2">
-                              <Phone className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-sm">{cliente.telefone}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {cliente.email && (
+                                <div className="flex items-center space-x-2">
+                                  <Mail className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{cliente.email}</span>
+                                </div>
+                              )}
+                              {cliente.telefone && (
+                                <div className="flex items-center space-x-2">
+                                  <Phone className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{cliente.telefone}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {cliente.cidade && (
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-sm">{cliente.cidade}/{cliente.estado}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {cliente.cidade && (
+                                <div className="flex items-center space-x-2">
+                                  <MapPin className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{cliente.cidade}/{cliente.estado}</span>
+                                </div>
+                              )}
+                              {cliente.cep && (
+                                <p className="text-xs text-muted-foreground">CEP: {cliente.cep}</p>
+                              )}
                             </div>
-                          )}
-                          {cliente.cep && (
-                            <p className="text-xs text-muted-foreground">CEP: {cliente.cep}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={cliente.ativo ? "default" : "destructive"}>
-                          {cliente.ativo ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(cliente)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(cliente.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={cliente.ativo ? "default" : "destructive"}>
+                              {cliente.ativo ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(cliente)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(cliente.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

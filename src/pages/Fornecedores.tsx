@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ResponsiveList } from '@/components/ui/responsive-list';
 
 interface Fornecedor {
   id: string;
@@ -200,7 +201,7 @@ const Fornecedores = () => {
               Novo Fornecedor
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[90vw]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? 'Editar Fornecedor' : 'Novo Fornecedor'}
@@ -344,123 +345,188 @@ const Fornecedores = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fornecedor</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Carregando...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredFornecedores.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold">Nenhum fornecedor encontrado</h3>
-                      <p className="text-muted-foreground">
-                        {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro fornecedor'}
-                      </p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredFornecedores.map((fornecedor) => (
-                    <TableRow key={fornecedor.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                          <Building className="h-5 w-5 text-warning" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{fornecedor.nome}</p>
-                        </div>
+          {isLoading ? (
+            <div className="text-center py-8">Carregando...</div>
+          ) : filteredFornecedores.length === 0 ? (
+            <div className="text-center py-8">
+              <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold">Nenhum fornecedor encontrado</h3>
+              <p className="text-muted-foreground">
+                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro fornecedor'}
+              </p>
+            </div>
+          ) : (
+            <ResponsiveList
+              data={filteredFornecedores}
+              renderCard={(fornecedor) => (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Building className="h-5 w-5 text-warning" />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{fornecedor.nome}</p>
                         {fornecedor.cnpj && (
-                          <p className="text-sm">CNPJ: {fornecedor.cnpj}</p>
+                          <p className="text-sm text-muted-foreground">CNPJ: {fornecedor.cnpj}</p>
                         )}
-                        {fornecedor.cpf && (
-                          <p className="text-sm">CPF: {fornecedor.cpf}</p>
-                        )}
-                        {!fornecedor.cnpj && !fornecedor.cpf && (
-                          <p className="text-sm text-muted-foreground">-</p>
+                        {fornecedor.cpf && !fornecedor.cnpj && (
+                          <p className="text-sm text-muted-foreground">CPF: {fornecedor.cpf}</p>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {fornecedor.email && (
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{fornecedor.email}</span>
-                          </div>
-                        )}
-                        {fornecedor.telefone && (
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{fornecedor.telefone}</span>
-                          </div>
-                        )}
+                    </div>
+                    <Badge variant={fornecedor.ativo ? "default" : "destructive"}>
+                      {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {fornecedor.email && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">{fornecedor.email}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {fornecedor.cidade && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{fornecedor.cidade}/{fornecedor.estado}</span>
-                          </div>
-                        )}
-                        {fornecedor.cep && (
-                          <p className="text-xs text-muted-foreground">CEP: {fornecedor.cep}</p>
-                        )}
+                    )}
+                    {fornecedor.telefone && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{fornecedor.telefone}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    )}
+                    {fornecedor.cidade && (
+                      <div className="flex items-center space-x-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{fornecedor.cidade}/{fornecedor.estado}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(fornecedor.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={fornecedor.ativo ? "default" : "destructive"}>
-                        {fornecedor.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(fornecedor)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(fornecedor.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(fornecedor)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(fornecedor.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              renderTable={() => (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fornecedor</TableHead>
+                        <TableHead>Documento</TableHead>
+                        <TableHead>Contato</TableHead>
+                        <TableHead>Localização</TableHead>
+                        <TableHead>Cadastro</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFornecedores.map((fornecedor) => (
+                        <TableRow key={fornecedor.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
+                                <Building className="h-5 w-5 text-warning" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{fornecedor.nome}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {fornecedor.cnpj && (
+                                <p className="text-sm">CNPJ: {fornecedor.cnpj}</p>
+                              )}
+                              {fornecedor.cpf && (
+                                <p className="text-sm">CPF: {fornecedor.cpf}</p>
+                              )}
+                              {!fornecedor.cnpj && !fornecedor.cpf && (
+                                <p className="text-sm text-muted-foreground">-</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {fornecedor.email && (
+                                <div className="flex items-center space-x-2">
+                                  <Mail className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{fornecedor.email}</span>
+                                </div>
+                              )}
+                              {fornecedor.telefone && (
+                                <div className="flex items-center space-x-2">
+                                  <Phone className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{fornecedor.telefone}</span>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {fornecedor.cidade && (
+                                <div className="flex items-center space-x-2">
+                                  <MapPin className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{fornecedor.cidade}/{fornecedor.estado}</span>
+                                </div>
+                              )}
+                              {fornecedor.cep && (
+                                <p className="text-xs text-muted-foreground">CEP: {fornecedor.cep}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(fornecedor.created_at).toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={fornecedor.ativo ? "default" : "destructive"}>
+                              {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(fornecedor)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(fornecedor.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
