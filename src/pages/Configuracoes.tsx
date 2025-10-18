@@ -386,40 +386,50 @@ export default function Configuracoes() {
 
         {/* Configurações de Estoque */}
         <TabsContent value="estoque">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Estoque</CardTitle>
-              <CardDescription>Controle comportamento do estoque e alertas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Alertar Estoque Mínimo</Label>
-                    <p className="text-sm text-muted-foreground">Exibir alertas quando produtos atingem estoque mínimo</p>
-                  </div>
-                  <Switch
-                    checked={configuracoes.estoque_alertar_minimo}
-                    onCheckedChange={(checked) => handleInputChange('estoque_alertar_minimo', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Permitir Estoque Negativo</Label>
-                    <p className="text-sm text-muted-foreground">Permite vender produtos mesmo sem estoque</p>
-                  </div>
-                  <Switch
-                    checked={configuracoes.estoque_permitir_negativo}
-                    onCheckedChange={(checked) => handleInputChange('estoque_permitir_negativo', checked)}
-                  />
-                </div>
-              </div>
-
-              <Button onClick={() => handleSave('estoque')} disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar Configurações'}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Database className="h-5 w-5" />
+                  <span>Configurações de Estoque</span>
+                </CardTitle>
+                <CardDescription>
+                  Configure opções de controle e alertas de estoque
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {loading ? (
+                  <p className="text-muted-foreground">Carregando configurações...</p>
+                ) : (
+                  configuracoesBD
+                    .filter(c => c.chave === 'estoque_permitir_negativo')
+                    .map((config) => {
+                      const Icon = Package;
+                      return (
+                        <div key={config.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                          <div className="flex items-center space-x-4">
+                            <Icon className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                              <Label htmlFor={config.chave} className="text-base font-medium cursor-pointer">
+                                Permitir Estoque Negativo
+                              </Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {config.descricao}
+                              </p>
+                            </div>
+                          </div>
+                          <Switch
+                            id={config.chave}
+                            checked={config.valor}
+                            onCheckedChange={() => handleToggleBD(config)}
+                          />
+                        </div>
+                      );
+                    })
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Configurações de Impressão */}

@@ -75,6 +75,9 @@ const PDV = () => {
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [searchedProducts, setSearchedProducts] = useState<Product[]>([]);
   
+  // Configuração de estoque
+  const [permitirEstoqueNegativo, setPermitirEstoqueNegativo] = useState(false);
+  
   // Estados para desconto por item
   const [showDescontoItem, setShowDescontoItem] = useState(false);
   const [itemDescontoId, setItemDescontoId] = useState<string>('');
@@ -124,14 +127,26 @@ const PDV = () => {
   }, []);
 
   const loadConfiguracoes = async () => {
-    const { data } = await supabase
+    // Carregar venda sem cadastro
+    const { data: vendaSemCadastroConfig } = await supabase
       .from('configuracoes')
       .select('*')
       .eq('chave', 'venda_sem_cadastro')
       .maybeSingle();
 
-    if (data) {
-      setVendaSemCadastro(data.valor);
+    if (vendaSemCadastroConfig) {
+      setVendaSemCadastro(vendaSemCadastroConfig.valor);
+    }
+
+    // Carregar permitir estoque negativo
+    const { data: estoqueNegativoConfig } = await supabase
+      .from('configuracoes')
+      .select('*')
+      .eq('chave', 'estoque_permitir_negativo')
+      .maybeSingle();
+
+    if (estoqueNegativoConfig) {
+      setPermitirEstoqueNegativo(estoqueNegativoConfig.valor);
     }
   };
 
@@ -284,9 +299,28 @@ const PDV = () => {
   };
 
   const addToCart = (product: Product) => {
+    // Só verificar estoque se a configuração não permitir estoque negativo
+    if (!permitirEstoqueNegativo && product.estoque_atual <= 0) {
+      toast({
+        title: "Estoque insuficiente",
+        description: `Produto "${product.nome}" sem estoque`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     const existingItem = cart.find(item => item.id === product.id);
     
     if (existingItem) {
+      // Só verificar quantidade máxima se não permitir estoque negativo
+      if (!permitirEstoqueNegativo && existingItem.quantidade >= product.estoque_atual) {
+        toast({
+          title: "Estoque insuficiente",
+          description: `Estoque disponível: ${product.estoque_atual}`,
+          variant: "destructive"
+        });
+        return;
+      }
       updateQuantity(product.id, existingItem.quantidade + 1);
     } else {
       const newItem: CartItem = {
@@ -311,6 +345,19 @@ const PDV = () => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
       return;
+    }
+
+    // Só verificar estoque se não permitir estoque negativo
+    if (!permitirEstoqueNegativo) {
+      const product = products.find(p => p.id === productId);
+      if (product && newQuantity > product.estoque_atual) {
+        toast({
+          title: "Estoque insuficiente",
+          description: `Estoque disponível: ${product.estoque_atual}`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setCart(cart.map(item =>
