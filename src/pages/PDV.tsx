@@ -401,18 +401,18 @@ const PDV = () => {
       return;
     }
 
-    // Criar produto temporário no banco
+    // Criar produto temporário no banco com estoque inicial de 1
     const { data: novoProduto, error } = await supabase
       .from('produtos')
       .insert({
         nome: produtoTemp.nome,
         preco_venda: produtoTemp.preco_venda,
         preco_custo: produtoTemp.preco_custo || 0,
-        estoque_atual: 0,
+        estoque_atual: 1,
         estoque_minimo: 0,
         unidade_medida: 'UN',
         produto_temporario: true,
-        codigo_interno: 'TEMP' + Date.now()
+        codigo_interno: Date.now().toString()
       })
       .select()
       .single();
@@ -425,6 +425,18 @@ const PDV = () => {
       });
       return;
     }
+
+    // Registrar entrada no estoque (já que o produto foi vendido, havia 1 em estoque)
+    await supabase
+      .from('movimentacao_estoque')
+      .insert({
+        produto_id: novoProduto.id,
+        tipo_movimentacao: 'entrada',
+        quantidade: 1,
+        valor_unitario: produtoTemp.preco_custo || 0,
+        valor_total: produtoTemp.preco_custo || 0,
+        observacao: 'Entrada automática - Produto temporário'
+      });
 
     // Adicionar ao carrinho
     const newItem: CartItem = {
