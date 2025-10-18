@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { 
   ShoppingCart, 
   Search, 
@@ -38,8 +39,6 @@ interface Venda {
 }
 
 export default function Vendas() {
-  const [vendas, setVendas] = useState<Venda[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVenda, setSelectedVenda] = useState<Venda | null>(null);
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -47,12 +46,24 @@ export default function Vendas() {
   const [filtroData, setFiltroData] = useState<string>('hoje');
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchVendas();
-  }, [filtroData, filtroStatus]);
+  const getDataInicio = () => {
+    if (filtroData === 'hoje') {
+      return new Date().toISOString().split('T')[0];
+    } else if (filtroData === 'semana') {
+      const semanaAtras = new Date();
+      semanaAtras.setDate(semanaAtras.getDate() - 7);
+      return semanaAtras.toISOString();
+    } else if (filtroData === 'mes') {
+      const mesAtras = new Date();
+      mesAtras.setMonth(mesAtras.getMonth() - 1);
+      return mesAtras.toISOString();
+    }
+    return '';
+  };
 
-  const fetchVendas = async () => {
-    try {
+  const { data: vendas = [], isLoading: loading } = useSupabaseQuery<Venda>(
+    ['vendas', filtroData, filtroStatus],
+    async () => {
       let query = supabase
         .from('vendas')
         .select(`
@@ -74,39 +85,18 @@ export default function Vendas() {
         `)
         .order('created_at', { ascending: false });
 
-      // Filtro por data
-      if (filtroData === 'hoje') {
-        const hoje = new Date().toISOString().split('T')[0];
-        query = query.gte('created_at', hoje);
-      } else if (filtroData === 'semana') {
-        const semanaAtras = new Date();
-        semanaAtras.setDate(semanaAtras.getDate() - 7);
-        query = query.gte('created_at', semanaAtras.toISOString());
-      } else if (filtroData === 'mes') {
-        const mesAtras = new Date();
-        mesAtras.setMonth(mesAtras.getMonth() - 1);
-        query = query.gte('created_at', mesAtras.toISOString());
+      const dataInicio = getDataInicio();
+      if (dataInicio) {
+        query = query.gte('created_at', dataInicio);
       }
 
-      // Filtro por status
       if (filtroStatus !== 'todos') {
         query = query.eq('status', filtroStatus);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setVendas(data || []);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar vendas",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      return query;
     }
-  };
+  );
 
   const filteredVendas = vendas.filter(venda =>
     venda.numero_venda.toString().includes(searchTerm) ||

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { 
   Package, 
   Plus, 
@@ -43,9 +44,6 @@ interface MovimentacaoEstoque {
 }
 
 export default function Estoque() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMovimentacao, setShowMovimentacao] = useState(false);
   const [searchMovimentacao, setSearchMovimentacao] = useState('');
@@ -65,13 +63,9 @@ export default function Estoque() {
   
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchProdutos();
-    fetchMovimentacoes();
-  }, []);
-
-  const fetchProdutos = async () => {
-    try {
+  const { data: produtos = [], isLoading: loading, refetch: refetchProdutos } = useSupabaseQuery<Produto>(
+    ['produtos-estoque'],
+    async () => {
       const { data, error } = await supabase
         .from('produtos')
         .select(`
@@ -86,22 +80,13 @@ export default function Estoque() {
         `)
         .eq('ativo', true)
         .order('nome');
-
-      if (error) throw error;
-      setProdutos(data || []);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar produtos",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      return { data: data || [], error };
     }
-  };
+  );
 
-  const fetchMovimentacoes = async () => {
-    try {
+  const { data: movimentacoes = [], refetch: refetchMovimentacoes } = useSupabaseQuery<MovimentacaoEstoque>(
+    ['movimentacoes-estoque'],
+    async () => {
       const { data, error } = await supabase
         .from('movimentacao_estoque')
         .select(`
@@ -115,13 +100,9 @@ export default function Estoque() {
         `)
         .order('created_at', { ascending: false })
         .limit(50);
-
-      if (error) throw error;
-      setMovimentacoes((data || []) as MovimentacaoEstoque[]);
-    } catch (error) {
-      console.error('Erro ao carregar movimentações:', error);
+      return { data: (data || []) as MovimentacaoEstoque[], error };
     }
-  };
+  );
 
   const buscarProduto = () => {
     if (!searchProduto.trim()) return;
@@ -194,8 +175,8 @@ export default function Estoque() {
       setShowReceberMercadoria(false);
 
       // Recarregar dados
-      fetchProdutos();
-      fetchMovimentacoes();
+      refetchProdutos();
+      refetchMovimentacoes();
     } catch (error) {
       toast({
         title: "Erro",
@@ -274,8 +255,8 @@ export default function Estoque() {
       setShowMovimentacao(false);
 
       // Recarregar dados
-      fetchProdutos();
-      fetchMovimentacoes();
+      refetchProdutos();
+      refetchMovimentacoes();
     } catch (error) {
       toast({
         title: "Erro",

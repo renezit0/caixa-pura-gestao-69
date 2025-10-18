@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +22,6 @@ interface Despesa {
 }
 
 export default function Despesas() {
-  const [despesas, setDespesas] = useState<Despesa[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [novaDespesa, setNovaDespesa] = useState({
@@ -34,29 +33,16 @@ export default function Despesas() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchDespesas();
-  }, []);
-
-  const fetchDespesas = async () => {
-    try {
+  const { data: despesas = [], isLoading: loading, refetch } = useSupabaseQuery<Despesa>(
+    ['despesas'],
+    async () => {
       const { data, error } = await supabase
         .from('despesas')
         .select('*')
         .order('data_despesa', { ascending: false });
-
-      if (error) throw error;
-      setDespesas(data || []);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar despesas",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      return { data: data || [], error };
     }
-  };
+  );
 
   const handleSave = async () => {
     if (!novaDespesa.descricao || novaDespesa.valor <= 0) {
@@ -94,7 +80,7 @@ export default function Despesas() {
         observacoes: ''
       });
       setShowDialog(false);
-      fetchDespesas();
+      refetch();
     } catch (error) {
       toast({
         title: "Erro",
@@ -120,7 +106,7 @@ export default function Despesas() {
         description: "Despesa excluída com sucesso"
       });
 
-      fetchDespesas();
+      refetch();
     } catch (error) {
       toast({
         title: "Erro",
