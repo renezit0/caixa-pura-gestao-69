@@ -157,6 +157,39 @@ export type Database = {
         }
         Relationships: []
       }
+      despesas: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data_despesa: string
+          descricao: string
+          id: string
+          observacoes: string | null
+          usuario_id: string | null
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data_despesa?: string
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          usuario_id?: string | null
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data_despesa?: string
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          usuario_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       fornecedores: {
         Row: {
           ativo: boolean | null

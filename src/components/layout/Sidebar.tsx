@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Store, ShoppingCart, Package, Users, Truck, BarChart3, Settings, Tag, History, CreditCard, TrendingUp } from 'lucide-react';
+import { Store, ShoppingCart, Package, Users, Truck, BarChart3, Settings, Tag, History, CreditCard, TrendingUp, Receipt } from 'lucide-react';
 const sidebarItems = [{
   title: 'Dashboard',
   url: '/',
@@ -38,6 +38,10 @@ const sidebarItems = [{
   title: 'Relatórios',
   url: '/relatorios',
   icon: History
+}, {
+  title: 'Despesas',
+  url: '/despesas',
+  icon: Receipt
 }, {
   title: 'Configurações',
   url: '/configuracoes',

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,7 @@ interface ProdutoMaisVendido {
 export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState<string>('7');
+  const [considerarDespesas, setConsiderarDespesas] = useState(false);
   const [vendasPorDia, setVendasPorDia] = useState<RelatorioVendas[]>([]);
   const [produtosMaisVendidos, setProdutosMaisVendidos] = useState<ProdutoMaisVendido[]>([]);
   const [resumoGeral, setResumoGeral] = useState({
@@ -52,7 +54,7 @@ export default function Relatorios() {
 
   useEffect(() => {
     fetchRelatorios();
-  }, [periodo]);
+  }, [periodo, considerarDespesas]);
 
   const fetchRelatorios = async () => {
     setLoading(true);
@@ -231,7 +233,22 @@ export default function Relatorios() {
       const ticketMedio = totalVendas > 0 ? faturamentoTotal / totalVendas : 0;
       const custoMedio = quantidadeItens > 0 ? custoTotal / quantidadeItens : 0;
       const faturamentoMedio = quantidadeItens > 0 ? faturamentoTotal / quantidadeItens : 0;
-      const lucroTotal = faturamentoTotal - custoTotal;
+      let lucroTotal = faturamentoTotal - custoTotal;
+      
+      // Buscar despesas se habilitado
+      let totalDespesas = 0;
+      if (considerarDespesas) {
+        const { data: despesas, error: despesasError } = await supabase
+          .from('despesas')
+          .select('valor')
+          .gte('data_despesa', dataInicio.toISOString());
+
+        if (!despesasError && despesas) {
+          totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+          lucroTotal = lucroTotal - totalDespesas;
+        }
+      }
+      
       const lucroMedio = totalVendas > 0 ? lucroTotal / totalVendas : 0;
 
       setResumoGeral({
@@ -262,6 +279,18 @@ export default function Relatorios() {
           <p className="text-muted-foreground">Análises e insights do negócio</p>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="considerarDespesas"
+              checked={considerarDespesas}
+              onChange={(e) => setConsiderarDespesas(e.target.checked)}
+              className="rounded border-input"
+            />
+            <Label htmlFor="considerarDespesas" className="text-sm cursor-pointer">
+              Considerar despesas
+            </Label>
+          </div>
           <Select value={periodo} onValueChange={setPeriodo}>
             <SelectTrigger className="w-40">
               <SelectValue />
