@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface CustomUser {
   id: string;
@@ -13,7 +12,7 @@ interface AuthContextType {
   user: CustomUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +28,6 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<CustomUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for existing session in localStorage
@@ -56,7 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = result.user;
         setUser(userData);
         localStorage.setItem('authUser', JSON.stringify(userData));
-        navigate('/');
         return { error: null };
       } else {
         return { error: { message: result?.message || 'Credenciais inválidas' } };
@@ -66,10 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
+  const signOut = () => {
     setUser(null);
     localStorage.removeItem('authUser');
-    navigate('/login');
   };
 
   const value = {

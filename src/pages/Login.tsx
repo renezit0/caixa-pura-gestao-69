@@ -34,14 +34,14 @@ const LoginPage = () => {
         description: error.message || "Credenciais inválidas",
         variant: "destructive"
       });
+      setLoading(false);
     } else {
       toast({
         title: "Login realizado!",
         description: "Bem-vindo ao sistema de gestão",
       });
+      navigate('/');
     }
-    
-    setLoading(false);
   };
 
   return (
