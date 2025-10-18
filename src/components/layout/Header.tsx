@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const { signOut, profile } = useAuth();
+  const { signOut, user } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -78,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                   <User className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">{profile?.nome || 'Usuário'}</p>
-                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
+                  <p className="text-sm font-medium">{user?.nome || 'Usuário'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

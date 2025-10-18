@@ -1,20 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
 
-interface Profile {
+interface CustomUser {
   id: string;
-  nome: string;
   email: string;
+  nome: string;
+  tipo_usuario: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  profile: Profile | null;
-  isAdmin: boolean;
+  user: CustomUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
-  signUp: (email: string, password: string, nome: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -29,120 +27,55 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<CustomUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Defer profile and role fetching
-          setTimeout(async () => {
-            await fetchUserProfile(session.user.id);
-            await checkAdminRole(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-        checkAdminRole(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (!error && data) {
-      setProfile(data);
+    // Check for existing session in localStorage
+    const storedUser = localStorage.getItem('authUser');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  };
-
-  const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .single();
-    
-    setIsAdmin(!error && !!data);
-  };
+    setLoading(false);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.rpc('authenticate_user', {
+        user_email: email,
+        user_password: password
       });
 
-      if (error) throw error;
-      return { error: null };
-    } catch (error: any) {
-      return { error };
-    }
-  };
+      if (error) {
+        return { error };
+      }
 
-  const signUp = async (email: string, password: string, nome: string) => {
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nome: nome
-          }
-        }
-      });
-
-      if (error) throw error;
-      return { error: null };
-    } catch (error: any) {
+      const result = data as any;
+      if (result?.success) {
+        const userData = result.user;
+        setUser(userData);
+        localStorage.setItem('authUser', JSON.stringify(userData));
+        navigate('/');
+        return { error: null };
+      } else {
+        return { error: { message: result?.message || 'Credenciais inválidas' } };
+      }
+    } catch (error) {
       return { error };
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     setUser(null);
-    setProfile(null);
-    setIsAdmin(false);
+    localStorage.removeItem('authUser');
+    navigate('/login');
   };
 
   const value = {
     user,
-    profile,
-    isAdmin,
     loading,
     signIn,
-    signUp,
     signOut,
   };
 
