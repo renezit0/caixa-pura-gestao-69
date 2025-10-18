@@ -26,18 +26,15 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<CustomUser | null>(null);
-  const [loading, setLoading] = useState(true);
+// Initialize user state from localStorage synchronously to avoid flash
+const getInitialUser = () => {
+  const storedUser = localStorage.getItem('authUser');
+  return storedUser ? JSON.parse(storedUser) : null;
+};
 
-  useEffect(() => {
-    // Check for existing session in localStorage
-    const storedUser = localStorage.getItem('authUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<CustomUser | null>(getInitialUser);
+  const [loading, setLoading] = useState(false);
 
   const signIn = async (email: string, password: string) => {
     try {
