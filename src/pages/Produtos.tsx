@@ -169,10 +169,10 @@ const Produtos = () => {
           description: "Produto atualizado com sucesso",
         });
       } else {
-        // Para novo produto, incluímos um código temporário que será substituído pelo trigger
+        // codigo_interno será gerado automaticamente pelo trigger do banco
         const insertData = {
           ...productData,
-          codigo_interno: 'TEMP' + Date.now() // Será substituído pelo trigger
+          codigo_interno: '' // Trigger vai gerar o código
         };
         
         const { error } = await supabase
