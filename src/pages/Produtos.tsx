@@ -612,16 +612,6 @@ const Produtos = () => {
               </TableBody>
             </Table>
           </div>
-          
-          {filteredProdutos.length === 0 && (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">Nenhum produto encontrado</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro produto'}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
