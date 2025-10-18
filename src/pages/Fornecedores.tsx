@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import {
   Truck,
   Plus,
@@ -52,37 +53,16 @@ interface Fornecedor {
 
 const Fornecedores = () => {
   const { toast } = useToast();
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentSupplier, setCurrentSupplier] = useState<Partial<Fornecedor>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadFornecedores();
-  }, []);
-
-  const loadFornecedores = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('fornecedores')
-      .select('*')
-      .order('nome');
-      
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar fornecedores",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-    
-    setFornecedores(data || []);
-    setLoading(false);
-  };
+  const { data: fornecedores = [], isLoading, refetch } = useSupabaseQuery<Fornecedor>(
+    ['fornecedores'],
+    async () => await supabase.from('fornecedores').select('*').order('nome')
+  );
 
   const handleSave = async () => {
     if (!currentSupplier.nome) {
@@ -135,7 +115,7 @@ const Fornecedores = () => {
         });
       }
 
-      loadFornecedores();
+      refetch();
       handleCloseDialog();
 
     } catch (error) {
@@ -178,7 +158,7 @@ const Fornecedores = () => {
       description: "Fornecedor excluído com sucesso",
     });
 
-    loadFornecedores();
+    refetch();
   };
 
   const handleCloseDialog = () => {
@@ -374,8 +354,25 @@ const Fornecedores = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFornecedores.map((fornecedor) => (
-                  <TableRow key={fornecedor.id}>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      Carregando...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredFornecedores.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold">Nenhum fornecedor encontrado</h3>
+                      <p className="text-muted-foreground">
+                        {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro fornecedor'}
+                      </p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredFornecedores.map((fornecedor) => (
+                    <TableRow key={fornecedor.id}>
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
@@ -455,7 +452,8 @@ const Fornecedores = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
