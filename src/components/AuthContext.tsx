@@ -6,6 +6,7 @@ interface CustomUser {
   email: string;
   nome: string;
   username?: string;
+  matricula?: string;
   tipo_usuario: string;
 }
 

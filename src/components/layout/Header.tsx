@@ -82,7 +82,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium">{user?.nome || 'Usuário'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user?.matricula ? `Mat: ${user.matricula}` : 'Sem matrícula'}
+                  </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

@@ -507,6 +507,7 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          matricula: string | null
           nome: string
           senha_desconto: string | null
           tipo_usuario: string
@@ -519,6 +520,7 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          matricula?: string | null
           nome: string
           senha_desconto?: string | null
           tipo_usuario: string
@@ -531,6 +533,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          matricula?: string | null
           nome?: string
           senha_desconto?: string | null
           tipo_usuario?: string

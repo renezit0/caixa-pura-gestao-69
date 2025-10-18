@@ -36,6 +36,7 @@ interface Usuario {
   nome: string;
   email: string;
   username: string | null;
+  matricula: string | null;
   tipo_usuario: string;
   ativo: boolean;
 }
@@ -49,6 +50,7 @@ export const UsuariosConfig: React.FC = () => {
     nome: '',
     email: '',
     username: '',
+    matricula: '',
     senha_desconto: '',
     tipo_usuario: 'user'
   });
@@ -81,6 +83,7 @@ export const UsuariosConfig: React.FC = () => {
           nome: formData.nome,
           email: formData.email,
           username: formData.username,
+          matricula: formData.matricula,
           tipo_usuario: formData.tipo_usuario,
           ...(formData.senha_desconto && { senha_desconto: formData.senha_desconto })
         })
@@ -108,6 +111,7 @@ export const UsuariosConfig: React.FC = () => {
           nome: formData.nome,
           email: formData.email,
           username: formData.username,
+          matricula: formData.matricula,
           senha_desconto: formData.senha_desconto,
           tipo_usuario: formData.tipo_usuario,
           ativo: true
@@ -136,6 +140,7 @@ export const UsuariosConfig: React.FC = () => {
       nome: user.nome,
       email: user.email,
       username: user.username || '',
+      matricula: user.matricula || '',
       senha_desconto: '',
       tipo_usuario: user.tipo_usuario
     });
@@ -168,6 +173,7 @@ export const UsuariosConfig: React.FC = () => {
       nome: '',
       email: '',
       username: '',
+      matricula: '',
       senha_desconto: '',
       tipo_usuario: 'user'
     });
@@ -242,6 +248,16 @@ export const UsuariosConfig: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="matricula">Matrícula</Label>
+                  <Input
+                    id="matricula"
+                    value={formData.matricula}
+                    onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
+                    placeholder="Ex: 12345"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="senha">Senha {!editingUser && '*'}</Label>
                   <Input
                     id="senha"
@@ -288,7 +304,7 @@ export const UsuariosConfig: React.FC = () => {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Username</TableHead>
+              <TableHead>Matrícula</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
@@ -299,7 +315,7 @@ export const UsuariosConfig: React.FC = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.nome}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.username || '-'}</TableCell>
+                <TableCell>{user.matricula || '-'}</TableCell>
                 <TableCell>
                   <Badge variant={user.tipo_usuario === 'admin' ? 'default' : 'secondary'}>
                     {user.tipo_usuario === 'admin' ? 'Admin' : 'Usuário'}
