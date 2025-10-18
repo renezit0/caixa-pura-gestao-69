@@ -287,19 +287,20 @@ export default function Estoque() {
           <h1 className="text-2xl lg:text-3xl font-bold">Controle de Estoque</h1>
           <p className="text-muted-foreground text-sm lg:text-base">Gerencie entradas e saídas de produtos</p>
         </div>
-        <div className="flex gap-2 w-full lg:w-auto flex-wrap">
+        <div className="flex gap-2 w-full lg:w-auto">
           <Dialog open={showReceberMercadoria} onOpenChange={setShowReceberMercadoria}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="flex-1 sm:flex-none">
                 <Package className="w-4 h-4 mr-2" />
                 Receber Mercadoria
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl sm:max-w-[90vw]">
+            <DialogContent className="max-w-2xl sm:max-w-[95vw] max-h-[85vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle>Receber Mercadoria</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="overflow-y-auto flex-1 px-1">
+                <div className="space-y-4 pb-4">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Digite código ou nome do produto..."
@@ -360,22 +361,24 @@ export default function Estoque() {
                     </Button>
                   </div>
                 )}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
           
           <Dialog open={showMovimentacao} onOpenChange={setShowMovimentacao}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="flex-1 sm:flex-none">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Movimentação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl sm:max-w-[90vw]">
+            <DialogContent className="max-w-2xl sm:max-w-[95vw] max-h-[85vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle>Registrar Movimentação</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="overflow-y-auto flex-1 px-1">
+                <div className="space-y-4 pb-4">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Digite código ou nome do produto..."
@@ -449,6 +452,7 @@ export default function Estoque() {
                     </Button>
                   </div>
                 )}
+                </div>
               </div>
             </DialogContent>
           </Dialog>

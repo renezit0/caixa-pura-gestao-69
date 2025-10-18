@@ -198,12 +198,12 @@ const Clientes = () => {
             <Button onClick={() => {
               setCurrentClient({});
               setIsEditing(false);
-            }} className="hero-gradient glow-effect">
+            }} className="hero-gradient glow-effect w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Novo Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[90vw]">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col sm:max-w-[95vw]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? 'Editar Cliente' : 'Novo Cliente'}
@@ -213,7 +213,8 @@ const Clientes = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="overflow-y-auto flex-1 px-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo *</Label>
                 <Input
@@ -305,9 +306,10 @@ const Clientes = () => {
                   maxLength={2}
                 />
               </div>
+              </div>
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={handleCloseDialog}>
                 Cancelar
               </Button>

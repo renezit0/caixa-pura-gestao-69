@@ -356,12 +356,13 @@ export default function Vendas() {
 
       {/* Dialog de detalhes da venda */}
       <Dialog open={showDetalhes} onOpenChange={setShowDetalhes}>
-        <DialogContent className="max-w-2xl sm:max-w-[90vw]">
+        <DialogContent className="max-w-2xl sm:max-w-[95vw] max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Detalhes da Venda #{selectedVenda?.numero_venda}</DialogTitle>
           </DialogHeader>
-          {selectedVenda && (
-            <div className="space-y-4">
+          <div className="overflow-y-auto flex-1 px-1">
+            {selectedVenda && (
+              <div className="space-y-4 pb-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <strong>Data:</strong> {new Date(selectedVenda.created_at).toLocaleDateString('pt-BR')}
@@ -424,8 +425,9 @@ export default function Vendas() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

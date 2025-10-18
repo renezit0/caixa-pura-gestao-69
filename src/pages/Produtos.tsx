@@ -284,7 +284,7 @@ const Produtos = () => {
               Novo Produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-[90vw]">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col sm:max-w-[95vw]">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? 'Editar Produto' : 'Novo Produto'}
@@ -294,7 +294,8 @@ const Produtos = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="overflow-y-auto flex-1 px-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome do Produto *</Label>
                 <Input
@@ -442,9 +443,10 @@ const Produtos = () => {
                   placeholder="https://exemplo.com/imagem.jpg"
                 />
               </div>
+              </div>
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={handleCloseDialog}>
                 Cancelar
               </Button>

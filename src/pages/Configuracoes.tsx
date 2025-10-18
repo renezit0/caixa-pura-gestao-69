@@ -358,14 +358,14 @@ export default function Configuracoes() {
                   configuracoesBD.map((config) => {
                     const Icon = getConfigIcon(config.chave);
                     return (
-                      <div key={config.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                        <div className="flex items-center space-x-4">
-                          <Icon className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <Label htmlFor={config.chave} className="text-base font-medium cursor-pointer">
+                      <div key={config.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-card">
+                        <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1">
+                          <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5 sm:mt-0" />
+                          <div className="flex-1 min-w-0">
+                            <Label htmlFor={config.chave} className="text-sm sm:text-base font-medium cursor-pointer">
                               {getConfigLabel(config.chave)}
                             </Label>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                               {config.descricao}
                             </p>
                           </div>
@@ -374,6 +374,7 @@ export default function Configuracoes() {
                           id={config.chave}
                           checked={config.valor}
                           onCheckedChange={() => handleToggleBD(config)}
+                          className="flex-shrink-0"
                         />
                       </div>
                     );
@@ -406,14 +407,14 @@ export default function Configuracoes() {
                     .map((config) => {
                       const Icon = Package;
                       return (
-                        <div key={config.id} className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                          <div className="flex items-center space-x-4">
-                            <Icon className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <Label htmlFor={config.chave} className="text-base font-medium cursor-pointer">
+                        <div key={config.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-card">
+                          <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1">
+                            <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5 sm:mt-0" />
+                            <div className="flex-1 min-w-0">
+                              <Label htmlFor={config.chave} className="text-sm sm:text-base font-medium cursor-pointer">
                                 Permitir Estoque Negativo
                               </Label>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                                 {config.descricao}
                               </p>
                             </div>
@@ -422,6 +423,7 @@ export default function Configuracoes() {
                             id={config.chave}
                             checked={config.valor}
                             onCheckedChange={() => handleToggleBD(config)}
+                            className="flex-shrink-0"
                           />
                         </div>
                       );

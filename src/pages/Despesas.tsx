@@ -132,23 +132,24 @@ export default function Despesas() {
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Despesas</h1>
           <p className="text-muted-foreground">Controle suas despesas e custos</p>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Nova Despesa
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[90vw]">
+          <DialogContent className="sm:max-w-[95vw] max-h-[85vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Cadastrar Despesa</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="overflow-y-auto flex-1 px-1">
+              <div className="space-y-4 pb-4">
               <div>
                 <Label htmlFor="descricao">Descrição *</Label>
                 <Input
@@ -200,6 +201,7 @@ export default function Despesas() {
               <Button onClick={handleSave} className="w-full">
                 Cadastrar Despesa
               </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
