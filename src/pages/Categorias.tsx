@@ -15,6 +15,7 @@ import {
   Trash2,
   Package
 } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import {
   Dialog,
   DialogContent,
@@ -276,51 +277,65 @@ const Categorias = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategorias.map((categoria) => (
-                  <TableRow key={categoria.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <Tag className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{categoria.nome}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm text-muted-foreground">
-                        {categoria.descricao || '-'}
+                {loading ? (
+                  <TableSkeleton rows={5} columns={5} />
+                ) : filteredCategorias.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold">Nenhuma categoria encontrada</h3>
+                      <p className="text-muted-foreground">
+                        {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando sua primeira categoria'}
                       </p>
                     </TableCell>
-                    <TableCell>
-                      {new Date(categoria.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={categoria.ativo ? "default" : "destructive"}>
-                        {categoria.ativo ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(categoria)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(categoria.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredCategorias.map((categoria) => (
+                    <TableRow key={categoria.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <Tag className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{categoria.nome}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-muted-foreground">
+                          {categoria.descricao || '-'}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(categoria.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={categoria.ativo ? "default" : "destructive"}>
+                          {categoria.ativo ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(categoria)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(categoria.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

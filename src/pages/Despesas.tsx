@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Trash2, Search, DollarSign } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 interface Despesa {
   id: string;
@@ -256,9 +257,11 @@ export default function Despesas() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDespesas.length === 0 ? (
+              {loading ? (
+                <TableSkeleton rows={5} columns={6} />
+              ) : filteredDespesas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     Nenhuma despesa encontrada
                   </TableCell>
                 </TableRow>

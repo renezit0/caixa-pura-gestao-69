@@ -19,6 +19,7 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 interface Produto {
   id: string;
@@ -534,33 +535,43 @@ export default function Estoque() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProdutos.map((produto) => (
-                <TableRow key={produto.id}>
-                  <TableCell className="font-medium">{produto.nome}</TableCell>
-                  <TableCell>{produto.codigo_interno}</TableCell>
-                  <TableCell>{produto.categoria?.nome || 'Sem categoria'}</TableCell>
-                  <TableCell className="text-right">{produto.estoque_atual}</TableCell>
-                  <TableCell className="text-right">{produto.estoque_minimo}</TableCell>
-                  <TableCell className="text-right">
-                    {produto.estoque_atual <= produto.estoque_minimo ? (
-                      <Badge variant="destructive">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Baixo
-                      </Badge>
-                    ) : produto.estoque_atual <= produto.estoque_minimo * 2 ? (
-                      <Badge variant="secondary">
-                        <ArrowUpDown className="w-3 h-3 mr-1" />
-                        Atenção
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-success text-success-foreground">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        Normal
-                      </Badge>
-                    )}
+              {loading ? (
+                <TableSkeleton rows={5} columns={6} />
+              ) : filteredProdutos.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Nenhum produto encontrado
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredProdutos.map((produto) => (
+                  <TableRow key={produto.id}>
+                    <TableCell className="font-medium">{produto.nome}</TableCell>
+                    <TableCell>{produto.codigo_interno}</TableCell>
+                    <TableCell>{produto.categoria?.nome || 'Sem categoria'}</TableCell>
+                    <TableCell className="text-right">{produto.estoque_atual}</TableCell>
+                    <TableCell className="text-right">{produto.estoque_minimo}</TableCell>
+                    <TableCell className="text-right">
+                      {produto.estoque_atual <= produto.estoque_minimo ? (
+                        <Badge variant="destructive">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          Baixo
+                        </Badge>
+                      ) : produto.estoque_atual <= produto.estoque_minimo * 2 ? (
+                        <Badge variant="secondary">
+                          <ArrowUpDown className="w-3 h-3 mr-1" />
+                          Atenção
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-success text-success-foreground">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Normal
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

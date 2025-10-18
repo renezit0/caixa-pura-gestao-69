@@ -18,6 +18,7 @@ import {
   DollarSign,
   Barcode
 } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import {
   Dialog,
   DialogContent,
@@ -514,81 +515,95 @@ const Produtos = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProdutos.map((produto) => (
-                  <TableRow key={produto.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        {produto.imagem_url ? (
-                          <img 
-                            src={produto.imagem_url} 
-                            alt={produto.nome}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <Package className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium">{produto.nome}</p>
-                          <p className="text-sm text-muted-foreground">{produto.unidade_medida}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-mono">{produto.codigo_interno}</p>
-                        {produto.codigo_barras && (
-                          <p className="text-xs text-muted-foreground font-mono">{produto.codigo_barras}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getCategoriaName(produto.categoria_id)}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-semibold currency">{formatCurrency(produto.preco_venda)}</p>
-                        {produto.preco_custo > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            Custo: {formatCurrency(produto.preco_custo)}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span className={`font-semibold ${produto.estoque_atual <= produto.estoque_minimo ? 'text-warning' : 'text-foreground'}`}>
-                          {produto.estoque_atual}
-                        </span>
-                        {produto.estoque_atual <= produto.estoque_minimo && (
-                          <AlertTriangle className="h-4 w-4 text-warning" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={produto.ativo ? "default" : "destructive"}>
-                        {produto.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(produto)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(produto.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableSkeleton rows={5} columns={6} />
+                ) : filteredProdutos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold">Nenhum produto encontrado</h3>
+                      <p className="text-muted-foreground">
+                        {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece adicionando um novo produto'}
+                      </p>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredProdutos.map((produto) => (
+                    <TableRow key={produto.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          {produto.imagem_url ? (
+                            <img 
+                              src={produto.imagem_url} 
+                              alt={produto.nome}
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                              <Package className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{produto.nome}</p>
+                            <p className="text-sm text-muted-foreground">{produto.unidade_medida}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-mono">{produto.codigo_interno}</p>
+                          {produto.codigo_barras && (
+                            <p className="text-xs text-muted-foreground font-mono">{produto.codigo_barras}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getCategoriaName(produto.categoria_id)}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold currency">{formatCurrency(produto.preco_venda)}</p>
+                          {produto.preco_custo > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Custo: {formatCurrency(produto.preco_custo)}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <span className={`font-semibold ${produto.estoque_atual <= produto.estoque_minimo ? 'text-warning' : 'text-foreground'}`}>
+                            {produto.estoque_atual}
+                          </span>
+                          {produto.estoque_atual <= produto.estoque_minimo && (
+                            <AlertTriangle className="h-4 w-4 text-warning" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={produto.ativo ? "default" : "destructive"}>
+                          {produto.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(produto)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(produto.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

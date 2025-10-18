@@ -17,6 +17,7 @@ import {
   Mail,
   MapPin
 } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import {
   Dialog,
   DialogContent,
@@ -369,78 +370,92 @@ const Clientes = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClientes.map((cliente) => (
-                  <TableRow key={cliente.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{cliente.nome}</p>
-                          {cliente.cpf && (
-                            <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {cliente.email && (
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{cliente.email}</span>
-                          </div>
-                        )}
-                        {cliente.telefone && (
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{cliente.telefone}</span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {cliente.cidade && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{cliente.cidade}/{cliente.estado}</span>
-                          </div>
-                        )}
-                        {cliente.cep && (
-                          <p className="text-xs text-muted-foreground">CEP: {cliente.cep}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={cliente.ativo ? "default" : "destructive"}>
-                        {cliente.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(cliente)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(cliente.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableSkeleton rows={5} columns={5} />
+                ) : filteredClientes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold">Nenhum cliente encontrado</h3>
+                      <p className="text-muted-foreground">
+                        {searchTerm ? 'Tente ajustar os filtros de pesquisa' : 'Comece cadastrando seu primeiro cliente'}
+                      </p>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredClientes.map((cliente) => (
+                    <TableRow key={cliente.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{cliente.nome}</p>
+                            {cliente.cpf && (
+                              <p className="text-sm text-muted-foreground">CPF: {cliente.cpf}</p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {cliente.email && (
+                            <div className="flex items-center space-x-2">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm">{cliente.email}</span>
+                            </div>
+                          )}
+                          {cliente.telefone && (
+                            <div className="flex items-center space-x-2">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm">{cliente.telefone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {cliente.cidade && (
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm">{cliente.cidade}/{cliente.estado}</span>
+                            </div>
+                          )}
+                          {cliente.cep && (
+                            <p className="text-xs text-muted-foreground">CEP: {cliente.cep}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={cliente.ativo ? "default" : "destructive"}>
+                          {cliente.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(cliente)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(cliente.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
