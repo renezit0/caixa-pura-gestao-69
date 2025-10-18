@@ -18,6 +18,7 @@ import Relatorios from "./pages/Relatorios";
 import Despesas from "./pages/Despesas";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/*" element={
               <ProtectedRoute>
                 <MainLayout>

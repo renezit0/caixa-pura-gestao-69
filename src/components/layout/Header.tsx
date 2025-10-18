@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const { signOut, user } = useAuth();
+  const { signOut, profile } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </Button>
           
           <div className="hidden lg:block">
-            <h2 className="text-lg font-semibold">Caixa Pura</h2>
+            <h2 className="text-lg font-semibold">seeStore</h2>
             <p className="text-sm text-muted-foreground">
               Painel de Controle
             </p>
@@ -78,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                   <User className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">Flavio Admin</p>
-                  <p className="text-xs text-muted-foreground">Administrador</p>
+                  <p className="text-sm font-medium">{profile?.nome || 'Usuário'}</p>
+                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

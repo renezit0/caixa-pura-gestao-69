@@ -69,8 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Store className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">seeLL LOJA
-            </h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">seeStore</h1>
               <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
             </div>
           </div>
@@ -88,9 +87,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Footer info */}
           <div className="px-6 py-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              Sistema completo de PDV e gestão
-            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span>Desenvolvido por</span>
+              <img 
+                src="https://seellbr.com/assets/images/logoblack.png" 
+                alt="seeLL" 
+                className="h-4 opacity-60 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
         </div>
       </aside>
