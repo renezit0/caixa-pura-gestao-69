@@ -80,9 +80,20 @@ const PDV = () => {
   const [senhaDesconto, setSenhaDesconto] = useState('');
   const [valorDescontoItem, setValorDescontoItem] = useState(0);
 
+  // Estados para produto não cadastrado
+  const [vendaSemCadastro, setVendaSemCadastro] = useState(false);
+  const [isProdutoNaoCadastradoOpen, setIsProdutoNaoCadastradoOpen] = useState(false);
+  const [produtoTemp, setProdutoTemp] = useState({
+    nome: '',
+    preco_venda: 0,
+    preco_custo: 0,
+    quantidade: 1
+  });
+
   useEffect(() => {
     loadProducts();
     loadClientes();
+    loadConfiguracoes();
     
     // Listeners para teclas F5 e F2
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -98,6 +109,18 @@ const PDV = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
+
+  const loadConfiguracoes = async () => {
+    const { data } = await supabase
+      .from('configuracoes')
+      .select('*')
+      .eq('chave', 'venda_sem_cadastro')
+      .single();
+
+    if (data) {
+      setVendaSemCadastro(data.valor);
+    }
+  };
 
   const loadProducts = async () => {
     const { data, error } = await supabase
@@ -268,6 +291,65 @@ const PDV = () => {
   const openDescontoItem = (itemId: string) => {
     setItemDescontoId(itemId);
     setShowDescontoItem(true);
+  };
+
+  const handleAdicionarProdutoTemp = async () => {
+    if (!produtoTemp.nome || produtoTemp.preco_venda <= 0) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e preço de venda são obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Criar produto temporário no banco
+    const { data: novoProduto, error } = await supabase
+      .from('produtos')
+      .insert({
+        nome: produtoTemp.nome,
+        preco_venda: produtoTemp.preco_venda,
+        preco_custo: produtoTemp.preco_custo || 0,
+        estoque_atual: 0,
+        estoque_minimo: 0,
+        unidade_medida: 'UN',
+        produto_temporario: true,
+        codigo_interno: 'TEMP' + Date.now()
+      })
+      .select()
+      .single();
+
+    if (error || !novoProduto) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar produto temporário",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Adicionar ao carrinho
+    const newItem: CartItem = {
+      ...novoProduto,
+      quantidade: produtoTemp.quantidade,
+      subtotal: novoProduto.preco_venda * produtoTemp.quantidade,
+      desconto_item: 0
+    };
+    setCart([...cart, newItem]);
+
+    // Resetar form
+    setProdutoTemp({
+      nome: '',
+      preco_venda: 0,
+      preco_custo: 0,
+      quantidade: 1
+    });
+    setIsProdutoNaoCadastradoOpen(false);
+
+    toast({
+      title: "Produto adicionado",
+      description: "Produto não cadastrado adicionado ao carrinho",
+    });
   };
 
   const getTotal = () => {
@@ -556,14 +638,27 @@ const PDV = () => {
               </div>
             </div>
 
-            <Button 
-              onClick={finalizarVenda}
-              disabled={cart.length === 0 || loading}
-              className="w-full"
-              size="lg"
-            >
-              {loading ? 'Finalizando...' : 'Finalizar Venda (F2)'}
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={finalizarVenda}
+                disabled={cart.length === 0 || loading}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? 'Finalizando...' : 'Finalizar Venda (F2)'}
+              </Button>
+              
+              {vendaSemCadastro && (
+                <Button 
+                  onClick={() => setIsProdutoNaoCadastradoOpen(true)} 
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Produto Não Cadastrado
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -647,6 +742,75 @@ const PDV = () => {
           </div>
           <DialogFooter>
             <Button onClick={aplicarDescontoItem}>Aplicar Desconto</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Produto Não Cadastrado */}
+      <Dialog open={isProdutoNaoCadastradoOpen} onOpenChange={setIsProdutoNaoCadastradoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Produto Não Cadastrado</DialogTitle>
+            <DialogDescription>
+              Cadastre um produto temporário para esta venda
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="temp-nome">Nome do Produto *</Label>
+              <Input
+                id="temp-nome"
+                value={produtoTemp.nome}
+                onChange={(e) => setProdutoTemp({...produtoTemp, nome: e.target.value})}
+                placeholder="Digite o nome do produto"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="temp-preco">Preço de Venda *</Label>
+              <Input
+                id="temp-preco"
+                type="number"
+                step="0.01"
+                value={produtoTemp.preco_venda || ''}
+                onChange={(e) => setProdutoTemp({...produtoTemp, preco_venda: parseFloat(e.target.value) || 0})}
+                placeholder="0,00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="temp-custo">Preço de Custo (opcional)</Label>
+              <Input
+                id="temp-custo"
+                type="number"
+                step="0.01"
+                value={produtoTemp.preco_custo || ''}
+                onChange={(e) => setProdutoTemp({...produtoTemp, preco_custo: parseFloat(e.target.value) || 0})}
+                placeholder="0,00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="temp-qtd">Quantidade</Label>
+              <Input
+                id="temp-qtd"
+                type="number"
+                value={produtoTemp.quantidade}
+                onChange={(e) => setProdutoTemp({...produtoTemp, quantidade: parseInt(e.target.value) || 1})}
+                placeholder="1"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsProdutoNaoCadastradoOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAdicionarProdutoTemp}>
+              Adicionar ao Carrinho
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

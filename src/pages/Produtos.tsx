@@ -80,18 +80,38 @@ const Produtos = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Produto>>({});
   const [loading, setLoading] = useState(false);
+  const [exibirProdutosTemporarios, setExibirProdutosTemporarios] = useState(false);
 
   useEffect(() => {
+    loadConfiguracoes();
     loadProdutos();
     loadCategorias();
     loadFornecedores();
   }, []);
 
-  const loadProdutos = async () => {
-    const { data, error } = await supabase
-      .from('produtos')
+  const loadConfiguracoes = async () => {
+    const { data } = await supabase
+      .from('configuracoes')
       .select('*')
-      .order('nome');
+      .eq('chave', 'exibir_produtos_temporarios')
+      .single();
+
+    if (data) {
+      setExibirProdutosTemporarios(data.valor);
+    }
+  };
+
+  const loadProdutos = async () => {
+    let query = supabase
+      .from('produtos')
+      .select('*');
+
+    // Filtrar produtos temporários se a configuração estiver desabilitada
+    if (!exibirProdutosTemporarios) {
+      query = query.eq('produto_temporario', false);
+    }
+
+    const { data, error } = await query.order('nome');
       
     if (error) {
       toast({
@@ -233,6 +253,10 @@ const Produtos = () => {
     setIsEditing(false);
     setCurrentProduct({});
   };
+
+  useEffect(() => {
+    loadProdutos();
+  }, [exibirProdutosTemporarios]);
 
   const filteredProdutos = produtos.filter(produto =>
     produto.ativo && (

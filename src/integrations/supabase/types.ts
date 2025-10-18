@@ -130,6 +130,33 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes: {
+        Row: {
+          chave: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          updated_at: string | null
+          valor: boolean
+        }
+        Insert: {
+          chave: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          updated_at?: string | null
+          valor?: boolean
+        }
+        Update: {
+          chave?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          updated_at?: string | null
+          valor?: boolean
+        }
+        Relationships: []
+      }
       fornecedores: {
         Row: {
           ativo: boolean | null
@@ -303,6 +330,7 @@ export type Database = {
           nome: string
           preco_custo: number | null
           preco_venda: number
+          produto_temporario: boolean | null
           unidade_medida: string | null
           updated_at: string | null
         }
@@ -321,6 +349,7 @@ export type Database = {
           nome: string
           preco_custo?: number | null
           preco_venda: number
+          produto_temporario?: boolean | null
           unidade_medida?: string | null
           updated_at?: string | null
         }
@@ -339,6 +368,7 @@ export type Database = {
           nome?: string
           preco_custo?: number | null
           preco_venda?: number
+          produto_temporario?: boolean | null
           unidade_medida?: string | null
           updated_at?: string | null
         }
@@ -464,6 +494,10 @@ export type Database = {
       gerar_codigo_interno: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
