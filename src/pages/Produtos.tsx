@@ -85,10 +85,16 @@ const Produtos = () => {
 
   useEffect(() => {
     loadConfiguracoes();
-    loadProdutos();
     loadCategorias();
     loadFornecedores();
   }, []);
+
+  useEffect(() => {
+    // Só carrega produtos depois que a configuração foi carregada
+    if (exibirProdutosTemporarios !== undefined) {
+      loadProdutos();
+    }
+  }, [exibirProdutosTemporarios]);
 
   const loadConfiguracoes = async () => {
     const { data } = await supabase
@@ -103,6 +109,7 @@ const Produtos = () => {
   };
 
   const loadProdutos = async () => {
+    setLoading(true);
     let query = supabase
       .from('produtos')
       .select('*');
@@ -120,10 +127,12 @@ const Produtos = () => {
         description: "Erro ao carregar produtos",
         variant: "destructive"
       });
+      setLoading(false);
       return;
     }
     
     setProdutos(data || []);
+    setLoading(false);
   };
 
   const loadCategorias = async () => {
@@ -254,10 +263,6 @@ const Produtos = () => {
     setIsEditing(false);
     setCurrentProduct({});
   };
-
-  useEffect(() => {
-    loadProdutos();
-  }, [exibirProdutosTemporarios]);
 
   const filteredProdutos = produtos.filter(produto =>
     produto.ativo && (
