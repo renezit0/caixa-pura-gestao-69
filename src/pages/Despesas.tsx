@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export default function Despesas() {
     observacoes: ''
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: despesas = [], isLoading: loading, refetch } = useSupabaseQuery<Despesa>(
     ['despesas'],
@@ -81,6 +83,7 @@ export default function Despesas() {
       });
       setShowDialog(false);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['despesas'] });
     } catch (error) {
       toast({
         title: "Erro",
@@ -107,6 +110,7 @@ export default function Despesas() {
       });
 
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['despesas'] });
     } catch (error) {
       toast({
         title: "Erro",

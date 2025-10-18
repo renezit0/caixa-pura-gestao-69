@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Users,
   Plus,
@@ -54,6 +55,7 @@ interface Cliente {
 
 const Clientes = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -117,6 +119,7 @@ const Clientes = () => {
       }
 
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
       handleCloseDialog();
 
     } catch (error) {
@@ -160,6 +163,7 @@ const Clientes = () => {
     });
 
     refetch();
+    queryClient.invalidateQueries({ queryKey: ['clientes'] });
   };
 
   const handleCloseDialog = () => {

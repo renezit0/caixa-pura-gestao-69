@@ -85,12 +85,20 @@ const Produtos = () => {
 
   const { data: categorias = [] } = useSupabaseQuery<Categoria>(
     ['categorias'],
-    async () => await supabase.from('categorias').select('id, nome').eq('ativo', true).order('nome')
+    async () => {
+      const { data, error } = await supabase.from('categorias').select('id, nome').eq('ativo', true).order('nome');
+      return { data: data || [], error };
+    },
+    { staleTime: 60000 } // Cache por 1 minuto
   );
 
   const { data: fornecedores = [] } = useSupabaseQuery<Fornecedor>(
     ['fornecedores'],
-    async () => await supabase.from('fornecedores').select('id, nome').eq('ativo', true).order('nome')
+    async () => {
+      const { data, error } = await supabase.from('fornecedores').select('id, nome').eq('ativo', true).order('nome');
+      return { data: data || [], error };
+    },
+    { staleTime: 60000 }
   );
 
   const { data: produtos = [], isLoading, refetch: refetchProdutos } = useSupabaseQuery<Produto>(
@@ -100,9 +108,10 @@ const Produtos = () => {
       if (!exibirProdutosTemporarios) {
         query = query.eq('produto_temporario', false);
       }
-      return await query.order('nome');
+      const { data, error } = await query.order('nome');
+      return { data: data || [], error };
     },
-    { enabled: exibirProdutosTemporarios !== undefined }
+    { enabled: exibirProdutosTemporarios !== undefined, staleTime: 5000 } // Cache menor para produtos
   );
 
   useEffect(() => {
@@ -179,6 +188,7 @@ const Produtos = () => {
       }
 
       refetchProdutos();
+      queryClient.invalidateQueries({ queryKey: ['produtos'] }); // Força atualização
       handleCloseDialog();
 
     } catch (error) {
@@ -222,6 +232,7 @@ const Produtos = () => {
     });
 
     refetchProdutos();
+    queryClient.invalidateQueries({ queryKey: ['produtos'] });
   };
 
   const handleCloseDialog = () => {

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Tag,
   Plus,
@@ -45,6 +46,7 @@ interface Categoria {
 
 const Categorias = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +103,7 @@ const Categorias = () => {
       }
 
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['categorias'] });
       handleCloseDialog();
 
     } catch (error) {
@@ -144,6 +147,7 @@ const Categorias = () => {
     });
 
     refetch();
+    queryClient.invalidateQueries({ queryKey: ['categorias'] });
   };
 
   const handleCloseDialog = () => {

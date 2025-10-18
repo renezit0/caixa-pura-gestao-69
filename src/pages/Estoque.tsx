@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Package, 
   Plus, 
@@ -62,6 +63,7 @@ export default function Estoque() {
   const [observacaoReceber, setObservacaoReceber] = useState('');
   
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: produtos = [], isLoading: loading, refetch: refetchProdutos } = useSupabaseQuery<Produto>(
     ['produtos-estoque'],
@@ -177,6 +179,7 @@ export default function Estoque() {
       // Recarregar dados
       refetchProdutos();
       refetchMovimentacoes();
+      queryClient.invalidateQueries({ queryKey: ['produtos-estoque', 'movimentacoes-estoque'] });
     } catch (error) {
       toast({
         title: "Erro",
@@ -257,6 +260,7 @@ export default function Estoque() {
       // Recarregar dados
       refetchProdutos();
       refetchMovimentacoes();
+      queryClient.invalidateQueries({ queryKey: ['produtos-estoque', 'movimentacoes-estoque'] });
     } catch (error) {
       toast({
         title: "Erro",

@@ -15,7 +15,9 @@ export function useSupabaseQuery<T>(
       if (result.error) throw result.error;
       return result.data || [];
     },
-    staleTime: options?.staleTime ?? 30000, // Cache por 30 segundos
+    staleTime: options?.staleTime ?? 5000, // Cache por 5 segundos (reduzido de 30s)
     enabled: options?.enabled ?? true,
+    refetchOnWindowFocus: true, // Atualiza quando volta para a aba
+    refetchOnMount: true, // Atualiza ao montar
   });
 }

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Truck,
   Plus,
@@ -53,6 +54,7 @@ interface Fornecedor {
 
 const Fornecedores = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -116,6 +118,7 @@ const Fornecedores = () => {
       }
 
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
       handleCloseDialog();
 
     } catch (error) {
@@ -159,6 +162,7 @@ const Fornecedores = () => {
     });
 
     refetch();
+    queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
   };
 
   const handleCloseDialog = () => {
