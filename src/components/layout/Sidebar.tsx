@@ -110,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold text-foreground">
                 {empresa.nome}
               </h1>
               <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
