@@ -2,57 +2,33 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Menu, 
-  Bell, 
-  User, 
-  LogOut,
-  Settings,
-  DollarSign
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Menu, Bell, User, LogOut, Settings, DollarSign } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-
 interface HeaderProps {
   onMenuClick: () => void;
 }
-
-export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const { signOut, user } = useAuth();
+export const Header: React.FC<HeaderProps> = ({
+  onMenuClick
+}) => {
+  const {
+    signOut,
+    user
+  } = useAuth();
   const navigate = useNavigate();
-
   const handleLogout = () => {
     signOut();
     navigate('/login');
   };
-
-  return (
-    <header className="sticky top-0 z-30 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/95 border-b border-border">
+  return <header className="sticky top-0 z-30 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/95 border-b border-border">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         {/* Left side */}
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden"
-          >
+          <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="hidden lg:block">
-            <h2 className="text-lg font-semibold">seeStore</h2>
-            <p className="text-sm text-muted-foreground">
-              Painel de Controle
-            </p>
-          </div>
+          
         </div>
 
         {/* Right side */}
@@ -108,6 +84,5 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
