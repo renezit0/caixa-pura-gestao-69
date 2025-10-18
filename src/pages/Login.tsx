@@ -41,7 +41,9 @@ const LoginPage = () => {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src={seeStoreLogo} alt="seeStore" className="h-24 w-24" />
+            <div className="bg-foreground rounded-3xl p-4 inline-block">
+              <img src={seeStoreLogo} alt="seeStore" className="h-20 w-20" />
+            </div>
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-2">seeStore</h1>
           <p className="text-sm text-muted-foreground">
