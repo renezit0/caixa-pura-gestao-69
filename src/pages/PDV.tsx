@@ -54,6 +54,7 @@ interface Cliente {
   id: string;
   nome: string;
   cpf?: string;
+  telefone?: string;
 }
 
 const PDV = () => {
@@ -88,6 +89,18 @@ const PDV = () => {
     preco_venda: 0,
     preco_custo: 0,
     quantidade: 1
+  });
+
+  // Estados para busca e cadastro de cliente
+  const [clienteSearchTerm, setClienteSearchTerm] = useState('');
+  const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([]);
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+  const [isNovoClienteOpen, setIsNovoClienteOpen] = useState(false);
+  const [novoCliente, setNovoCliente] = useState({
+    nome: '',
+    cpf: '',
+    telefone: '',
+    email: ''
   });
 
   useEffect(() => {
@@ -143,11 +156,96 @@ const PDV = () => {
   const loadClientes = async () => {
     const { data, error } = await supabase
       .from('clientes')
-      .select('id, nome, cpf')
+      .select('id, nome, cpf, telefone')
       .eq('ativo', true);
       
     if (data) {
       setClientes(data);
+    }
+  };
+
+  const searchClientes = (termo: string) => {
+    if (!termo.trim()) {
+      setFilteredClientes([]);
+      setShowClienteDropdown(false);
+      return;
+    }
+
+    const termoLower = termo.toLowerCase();
+    const filtered = clientes.filter(c => 
+      c.nome.toLowerCase().includes(termoLower) ||
+      c.cpf?.includes(termo) ||
+      c.telefone?.includes(termo)
+    );
+
+    setFilteredClientes(filtered);
+    setShowClienteDropdown(true);
+
+    // Se não encontrou nenhum resultado, sugerir cadastro
+    if (filtered.length === 0 && termo.length > 2) {
+      // Não fazer nada aqui, o usuário verá "Nenhum cliente encontrado" no dropdown
+    }
+  };
+
+  const handleClienteSearch = (value: string) => {
+    setClienteSearchTerm(value);
+    searchClientes(value);
+  };
+
+  const handleSelectCliente = (cliente: Cliente) => {
+    setSelectedClient(cliente.id);
+    setClienteSearchTerm(cliente.nome);
+    setShowClienteDropdown(false);
+  };
+
+  const handleCadastrarNovoCliente = async () => {
+    if (!novoCliente.nome.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Nome do cliente é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: clienteCriado, error } = await supabase
+        .from('clientes')
+        .insert({
+          nome: novoCliente.nome.toUpperCase(),
+          cpf: novoCliente.cpf || null,
+          telefone: novoCliente.telefone || null,
+          email: novoCliente.email || null,
+          ativo: true
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Cliente cadastrado!",
+        description: "Cliente cadastrado com sucesso",
+      });
+
+      // Atualizar lista e selecionar o novo cliente
+      await loadClientes();
+      if (clienteCriado) {
+        setSelectedClient(clienteCriado.id);
+        setClienteSearchTerm(clienteCriado.nome);
+      }
+
+      // Limpar e fechar modal
+      setNovoCliente({ nome: '', cpf: '', telefone: '', email: '' });
+      setIsNovoClienteOpen(false);
+
+    } catch (error) {
+      console.error('Erro ao cadastrar cliente:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao cadastrar cliente",
+        variant: "destructive"
+      });
     }
   };
 
@@ -580,19 +678,77 @@ const PDV = () => {
             {/* Cliente */}
             <div className="space-y-2">
               <Label>Cliente (Opcional)</Label>
-              <Select value={selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sem-cliente">Venda sem cliente</SelectItem>
-                  {clientes.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nome} {cliente.cpf && `(${cliente.cpf})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  placeholder="Buscar por nome, CPF ou telefone..."
+                  value={clienteSearchTerm}
+                  onChange={(e) => handleClienteSearch(e.target.value)}
+                  onFocus={() => clienteSearchTerm && setShowClienteDropdown(true)}
+                />
+                
+                {showClienteDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto">
+                    {filteredClientes.length > 0 ? (
+                      filteredClientes.map((cliente) => (
+                        <div
+                          key={cliente.id}
+                          className="px-3 py-2 hover:bg-accent cursor-pointer"
+                          onClick={() => handleSelectCliente(cliente)}
+                        >
+                          <p className="font-medium">{cliente.nome}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {cliente.cpf && `CPF: ${cliente.cpf}`}
+                            {cliente.cpf && cliente.telefone && ' | '}
+                            {cliente.telefone && `Tel: ${cliente.telefone}`}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Nenhum cliente encontrado
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setIsNovoClienteOpen(true);
+                            setShowClienteDropdown(false);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Cadastrar Novo Cliente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedClient('');
+                    setClienteSearchTerm('');
+                    setShowClienteDropdown(false);
+                  }}
+                  className="flex-1"
+                >
+                  Limpar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNovoClienteOpen(true)}
+                  className="flex-1"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Novo Cliente
+                </Button>
+              </div>
             </div>
 
             {/* Forma de pagamento */}
@@ -742,6 +898,71 @@ const PDV = () => {
           </div>
           <DialogFooter>
             <Button onClick={aplicarDescontoItem}>Aplicar Desconto</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Novo Cliente */}
+      <Dialog open={isNovoClienteOpen} onOpenChange={setIsNovoClienteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
+            <DialogDescription>
+              Cadastro rápido de cliente. Apenas o nome é obrigatório.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="novo-cliente-nome">Nome *</Label>
+              <Input
+                id="novo-cliente-nome"
+                value={novoCliente.nome}
+                onChange={(e) => setNovoCliente({...novoCliente, nome: e.target.value.toUpperCase()})}
+                placeholder="NOME DO CLIENTE"
+                className="uppercase"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="novo-cliente-cpf">CPF</Label>
+              <Input
+                id="novo-cliente-cpf"
+                value={novoCliente.cpf}
+                onChange={(e) => setNovoCliente({...novoCliente, cpf: e.target.value})}
+                placeholder="000.000.000-00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="novo-cliente-telefone">Telefone</Label>
+              <Input
+                id="novo-cliente-telefone"
+                value={novoCliente.telefone}
+                onChange={(e) => setNovoCliente({...novoCliente, telefone: e.target.value})}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="novo-cliente-email">E-mail</Label>
+              <Input
+                id="novo-cliente-email"
+                type="email"
+                value={novoCliente.email}
+                onChange={(e) => setNovoCliente({...novoCliente, email: e.target.value})}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNovoClienteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCadastrarNovoCliente}>
+              Cadastrar Cliente
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
