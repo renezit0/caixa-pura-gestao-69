@@ -24,6 +24,13 @@ interface DashboardStats {
   valorTotalEstoque: number;
 }
 
+interface Atividade {
+  id: string;
+  tipo: string;
+  descricao: string;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
@@ -34,10 +41,32 @@ const Dashboard = () => {
     clientes: 0,
     valorTotalEstoque: 0,
   });
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
+    loadAtividades();
+
+    // Subscribe to real-time activities
+    const channel = supabase
+      .channel('atividades-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'atividades'
+        },
+        () => {
+          loadAtividades();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadDashboardData = async () => {
@@ -79,6 +108,75 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAtividades = async () => {
+    try {
+      const { data } = await supabase
+        .from('atividades')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      setAtividades(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar atividades:', error);
+    }
+  };
+
+  const getAtividadeIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'venda':
+        return <ShoppingCart className="h-4 w-4 text-success-foreground" />;
+      case 'produto':
+        return <Package className="h-4 w-4 text-primary-foreground" />;
+      case 'cliente':
+        return <Users className="h-4 w-4 text-primary-foreground" />;
+      default:
+        return <Package className="h-4 w-4 text-primary-foreground" />;
+    }
+  };
+
+  const getAtividadeBgColor = (tipo: string) => {
+    switch (tipo) {
+      case 'venda':
+        return 'bg-success-light';
+      case 'produto':
+        return 'bg-muted/50';
+      case 'cliente':
+        return 'bg-primary/10';
+      default:
+        return 'bg-muted/50';
+    }
+  };
+
+  const getIconBgColor = (tipo: string) => {
+    switch (tipo) {
+      case 'venda':
+        return 'bg-success';
+      case 'produto':
+        return 'bg-primary';
+      case 'cliente':
+        return 'bg-primary';
+      default:
+        return 'bg-primary';
+    }
+  };
+
+  const formatTempo = (dataStr: string) => {
+    const data = new Date(dataStr);
+    const agora = new Date();
+    const diffMs = agora.getTime() - data.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `Há ${diffMins} min`;
+    
+    const diffHoras = Math.floor(diffMins / 60);
+    if (diffHoras < 24) return `Há ${diffHoras}h`;
+    
+    const diffDias = Math.floor(diffHoras / 24);
+    return `Há ${diffDias}d`;
   };
 
   const formatCurrency = (value: number) => {
@@ -264,35 +362,30 @@ const Dashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-success-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="bg-success rounded-full p-2">
-                <ShoppingCart className="h-4 w-4 text-success-foreground" />
+          {atividades.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-4">
+              Nenhuma atividade recente
+            </p>
+          ) : (
+            atividades.map((atividade) => (
+              <div 
+                key={atividade.id}
+                className={`flex items-center justify-between p-3 rounded-lg ${getAtividadeBgColor(atividade.tipo)}`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`${getIconBgColor(atividade.tipo)} rounded-full p-2`}>
+                    {getAtividadeIcon(atividade.tipo)}
+                  </div>
+                  <div>
+                    <p className="font-medium">{atividade.descricao}</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className={atividade.tipo === 'venda' ? 'text-success border-success' : ''}>
+                  {formatTempo(atividade.created_at)}
+                </Badge>
               </div>
-              <div>
-                <p className="font-medium">Nova venda realizada</p>
-                <p className="text-sm text-muted-foreground">2 produtos vendidos</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-success border-success">
-              Há 5 min
-            </Badge>
-          </div>
-          
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary rounded-full p-2">
-                <Package className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <div>
-                <p className="font-medium">Produto cadastrado</p>
-                <p className="text-sm text-muted-foreground">Novo produto adicionado</p>
-              </div>
-            </div>
-            <Badge variant="outline">
-              Há 1h
-            </Badge>
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

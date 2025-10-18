@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      atividades: {
+        Row: {
+          created_at: string
+          descricao: string
+          detalhes: string | null
+          id: string
+          referencia_id: string | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          detalhes?: string | null
+          id?: string
+          referencia_id?: string | null
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          detalhes?: string | null
+          id?: string
+          referencia_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       caixa: {
         Row: {
           data_abertura: string | null
@@ -376,6 +414,47 @@ export type Database = {
           },
           {
             foreignKeyName: "movimentacao_estoque_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          link: string | null
+          mensagem: string
+          tipo: string
+          titulo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem: string
+          tipo?: string
+          titulo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link?: string | null
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
