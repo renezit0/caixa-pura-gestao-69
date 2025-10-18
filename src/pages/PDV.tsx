@@ -9,34 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  ShoppingCart,
-  Trash2,
-  Plus,
-  Minus,
-  Search,
-  Calculator,
-  CreditCard,
-  Banknote,
-  Percent,
-  PackagePlus
-} from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
+import { ShoppingCart, Trash2, Plus, Minus, Search, Calculator, CreditCard, Banknote, Percent, PackagePlus } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 interface Product {
   id: string;
   nome: string;
@@ -45,26 +20,26 @@ interface Product {
   preco_venda: number;
   estoque_atual: number;
 }
-
 interface CartItem extends Product {
   quantidade: number;
   subtotal: number;
   desconto_item: number;
 }
-
 interface Cliente {
   id: string;
   nome: string;
   cpf?: string;
   telefone?: string;
 }
-
 const PDV = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
   const isMobile = useIsMobile();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
-  
   const [products, setProducts] = useState<Product[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -72,15 +47,15 @@ const PDV = () => {
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [formaPagamento, setFormaPagamento] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Estados para busca de produto (F5)
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [searchedProducts, setSearchedProducts] = useState<Product[]>([]);
-  
+
   // Configuração de estoque
   const [permitirEstoqueNegativo, setPermitirEstoqueNegativo] = useState(false);
-  
+
   // Estados para desconto por item
   const [showDescontoItem, setShowDescontoItem] = useState(false);
   const [itemDescontoId, setItemDescontoId] = useState<string>('');
@@ -108,12 +83,11 @@ const PDV = () => {
     telefone: '',
     email: ''
   });
-
   useEffect(() => {
     loadProducts();
     loadClientes();
     loadConfiguracoes();
-    
+
     // Listeners para teclas F5, F7 e F2
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'F5') {
@@ -129,41 +103,31 @@ const PDV = () => {
         finalizarVenda();
       }
     };
-
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [vendaSemCadastro]);
-
   const loadConfiguracoes = async () => {
     // Carregar venda sem cadastro
-    const { data: vendaSemCadastroConfig } = await supabase
-      .from('configuracoes')
-      .select('*')
-      .eq('chave', 'venda_sem_cadastro')
-      .maybeSingle();
-
+    const {
+      data: vendaSemCadastroConfig
+    } = await supabase.from('configuracoes').select('*').eq('chave', 'venda_sem_cadastro').maybeSingle();
     if (vendaSemCadastroConfig) {
       setVendaSemCadastro(vendaSemCadastroConfig.valor);
     }
 
     // Carregar permitir estoque negativo
-    const { data: estoqueNegativoConfig } = await supabase
-      .from('configuracoes')
-      .select('*')
-      .eq('chave', 'estoque_permitir_negativo')
-      .maybeSingle();
-
+    const {
+      data: estoqueNegativoConfig
+    } = await supabase.from('configuracoes').select('*').eq('chave', 'estoque_permitir_negativo').maybeSingle();
     if (estoqueNegativoConfig) {
       setPermitirEstoqueNegativo(estoqueNegativoConfig.valor);
     }
   };
-
   const loadProducts = async () => {
-    const { data, error } = await supabase
-      .from('produtos')
-      .select('*')
-      .eq('ativo', true);
-      
+    const {
+      data,
+      error
+    } = await supabase.from('produtos').select('*').eq('ativo', true);
     if (error) {
       toast({
         title: "Erro",
@@ -172,35 +136,25 @@ const PDV = () => {
       });
       return;
     }
-    
     setProducts(data || []);
   };
-
   const loadClientes = async () => {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('id, nome, cpf, telefone')
-      .eq('ativo', true);
-      
+    const {
+      data,
+      error
+    } = await supabase.from('clientes').select('id, nome, cpf, telefone').eq('ativo', true);
     if (data) {
       setClientes(data);
     }
   };
-
   const searchClientes = (termo: string) => {
     if (!termo.trim()) {
       setFilteredClientes([]);
       setShowClienteDropdown(false);
       return;
     }
-
     const termoLower = termo.toLowerCase();
-    const filtered = clientes.filter(c => 
-      c.nome.toLowerCase().includes(termoLower) ||
-      c.cpf?.includes(termo) ||
-      c.telefone?.includes(termo)
-    );
-
+    const filtered = clientes.filter(c => c.nome.toLowerCase().includes(termoLower) || c.cpf?.includes(termo) || c.telefone?.includes(termo));
     setFilteredClientes(filtered);
     setShowClienteDropdown(true);
 
@@ -209,18 +163,15 @@ const PDV = () => {
       // Não fazer nada aqui, o usuário verá "Nenhum cliente encontrado" no dropdown
     }
   };
-
   const handleClienteSearch = (value: string) => {
     setClienteSearchTerm(value);
     searchClientes(value);
   };
-
   const handleSelectCliente = (cliente: Cliente) => {
     setSelectedClient(cliente.id);
     setClienteSearchTerm(cliente.nome);
     setShowClienteDropdown(false);
   };
-
   const handleCadastrarNovoCliente = async () => {
     if (!novoCliente.nome.trim()) {
       toast({
@@ -230,25 +181,21 @@ const PDV = () => {
       });
       return;
     }
-
     try {
-      const { data: clienteCriado, error } = await supabase
-        .from('clientes')
-        .insert({
-          nome: novoCliente.nome.toUpperCase(),
-          cpf: novoCliente.cpf || null,
-          telefone: novoCliente.telefone || null,
-          email: novoCliente.email || null,
-          ativo: true
-        })
-        .select()
-        .single();
-
+      const {
+        data: clienteCriado,
+        error
+      } = await supabase.from('clientes').insert({
+        nome: novoCliente.nome.toUpperCase(),
+        cpf: novoCliente.cpf || null,
+        telefone: novoCliente.telefone || null,
+        email: novoCliente.email || null,
+        ativo: true
+      }).select().single();
       if (error) throw error;
-
       toast({
         title: "Cliente cadastrado!",
-        description: "Cliente cadastrado com sucesso",
+        description: "Cliente cadastrado com sucesso"
       });
 
       // Atualizar lista e selecionar o novo cliente
@@ -259,9 +206,13 @@ const PDV = () => {
       }
 
       // Limpar e fechar modal
-      setNovoCliente({ nome: '', cpf: '', telefone: '', email: '' });
+      setNovoCliente({
+        nome: '',
+        cpf: '',
+        telefone: '',
+        email: ''
+      });
       setIsNovoClienteOpen(false);
-
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
       toast({
@@ -271,29 +222,17 @@ const PDV = () => {
       });
     }
   };
-
   const searchProducts = () => {
     if (!productSearchTerm.trim()) {
       setSearchedProducts([]);
       return;
     }
-    
-    const filtered = products.filter(p => 
-      p.nome.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      p.codigo_interno.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      p.codigo_barras?.toLowerCase().includes(productSearchTerm.toLowerCase())
-    );
-    
+    const filtered = products.filter(p => p.nome.toLowerCase().includes(productSearchTerm.toLowerCase()) || p.codigo_interno.toLowerCase().includes(productSearchTerm.toLowerCase()) || p.codigo_barras?.toLowerCase().includes(productSearchTerm.toLowerCase()));
     setSearchedProducts(filtered);
   };
-
   const handleBarcodeSearch = (codigo: string) => {
     if (!codigo.trim()) return;
-    
-    const product = products.find(p => 
-      p.codigo_interno === codigo || p.codigo_barras === codigo
-    );
-    
+    const product = products.find(p => p.codigo_interno === codigo || p.codigo_barras === codigo);
     if (product) {
       addToCart(product);
       setSearchTerm('');
@@ -305,7 +244,6 @@ const PDV = () => {
       });
     }
   };
-
   const addToCart = (product: Product) => {
     // Só verificar estoque se a configuração não permitir estoque negativo
     if (!permitirEstoqueNegativo && product.estoque_atual <= 0) {
@@ -316,9 +254,7 @@ const PDV = () => {
       });
       return;
     }
-
     const existingItem = cart.find(item => item.id === product.id);
-    
     if (existingItem) {
       // Só verificar quantidade máxima se não permitir estoque negativo
       if (!permitirEstoqueNegativo && existingItem.quantidade >= product.estoque_atual) {
@@ -339,16 +275,13 @@ const PDV = () => {
       };
       setCart([...cart, newItem]);
     }
-    
     setShowProductSearch(false);
     setProductSearchTerm('');
-    
     toast({
       title: "Produto adicionado",
-      description: `${product.nome} adicionado ao carrinho`,
+      description: `${product.nome} adicionado ao carrinho`
     });
   };
-
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
@@ -367,22 +300,15 @@ const PDV = () => {
         return;
       }
     }
-
-    setCart(cart.map(item =>
-      item.id === productId 
-        ? { 
-            ...item, 
-            quantidade: newQuantity, 
-            subtotal: (item.preco_venda * newQuantity) - item.desconto_item
-          }
-        : item
-    ));
+    setCart(cart.map(item => item.id === productId ? {
+      ...item,
+      quantidade: newQuantity,
+      subtotal: item.preco_venda * newQuantity - item.desconto_item
+    } : item));
   };
-
   const removeFromCart = (productId: string) => {
     setCart(cart.filter(item => item.id !== productId));
   };
-
   const aplicarDescontoItem = () => {
     if (senhaDesconto !== 'abacate') {
       toast({
@@ -392,33 +318,24 @@ const PDV = () => {
       });
       return;
     }
-    
-    setCart(cart.map(item => 
-      item.id === itemDescontoId 
-        ? { 
-            ...item, 
-            desconto_item: valorDescontoItem,
-            subtotal: (item.preco_venda * item.quantidade) - valorDescontoItem
-          }
-        : item
-    ));
-    
+    setCart(cart.map(item => item.id === itemDescontoId ? {
+      ...item,
+      desconto_item: valorDescontoItem,
+      subtotal: item.preco_venda * item.quantidade - valorDescontoItem
+    } : item));
     setShowDescontoItem(false);
     setSenhaDesconto('');
     setValorDescontoItem(0);
     setItemDescontoId('');
-    
     toast({
       title: "Desconto aplicado",
-      description: `Desconto de ${formatCurrency(valorDescontoItem)} aplicado`,
+      description: `Desconto de ${formatCurrency(valorDescontoItem)} aplicado`
     });
   };
-
   const openDescontoItem = (itemId: string) => {
     setItemDescontoId(itemId);
     setShowDescontoItem(true);
   };
-
   const handleAdicionarProdutoTemp = async () => {
     if (!produtoTemp.nome || produtoTemp.preco_venda <= 0) {
       toast({
@@ -430,21 +347,19 @@ const PDV = () => {
     }
 
     // Criar produto temporário no banco com estoque inicial de 1
-    const { data: novoProduto, error } = await supabase
-      .from('produtos')
-      .insert({
-        nome: produtoTemp.nome.toUpperCase(),
-        preco_venda: produtoTemp.preco_venda,
-        preco_custo: produtoTemp.preco_custo || 0,
-        estoque_atual: 1,
-        estoque_minimo: 0,
-        unidade_medida: 'UN',
-        produto_temporario: true,
-        codigo_interno: Math.floor(Math.random() * 99900 + 100).toString()
-      })
-      .select()
-      .single();
-
+    const {
+      data: novoProduto,
+      error
+    } = await supabase.from('produtos').insert({
+      nome: produtoTemp.nome.toUpperCase(),
+      preco_venda: produtoTemp.preco_venda,
+      preco_custo: produtoTemp.preco_custo || 0,
+      estoque_atual: 1,
+      estoque_minimo: 0,
+      unidade_medida: 'UN',
+      produto_temporario: true,
+      codigo_interno: Math.floor(Math.random() * 99900 + 100).toString()
+    }).select().single();
     if (error || !novoProduto) {
       toast({
         title: "Erro",
@@ -455,16 +370,14 @@ const PDV = () => {
     }
 
     // Registrar entrada no estoque (já que o produto foi vendido, havia 1 em estoque)
-    await supabase
-      .from('movimentacao_estoque')
-      .insert({
-        produto_id: novoProduto.id,
-        tipo_movimentacao: 'entrada',
-        quantidade: 1,
-        valor_unitario: produtoTemp.preco_custo || 0,
-        valor_total: produtoTemp.preco_custo || 0,
-        observacao: 'Entrada automática - Produto temporário'
-      });
+    await supabase.from('movimentacao_estoque').insert({
+      produto_id: novoProduto.id,
+      tipo_movimentacao: 'entrada',
+      quantidade: 1,
+      valor_unitario: produtoTemp.preco_custo || 0,
+      valor_total: produtoTemp.preco_custo || 0,
+      observacao: 'Entrada automática - Produto temporário'
+    });
 
     // Adicionar ao carrinho
     const newItem: CartItem = {
@@ -483,17 +396,14 @@ const PDV = () => {
       quantidade: 1
     });
     setIsProdutoNaoCadastradoOpen(false);
-
     toast({
       title: "Produto adicionado",
-      description: "Produto não cadastrado adicionado ao carrinho",
+      description: "Produto não cadastrado adicionado ao carrinho"
     });
   };
-
   const getTotal = () => {
     return cart.reduce((total, item) => total + item.subtotal, 0);
   };
-
   const finalizarVenda = async () => {
     if (cart.length === 0) {
       toast({
@@ -503,7 +413,6 @@ const PDV = () => {
       });
       return;
     }
-
     if (!formaPagamento) {
       toast({
         title: "Forma de pagamento",
@@ -512,7 +421,6 @@ const PDV = () => {
       });
       return;
     }
-
     if (!user?.id) {
       toast({
         title: "Erro de autenticação",
@@ -521,27 +429,23 @@ const PDV = () => {
       });
       return;
     }
-
     setLoading(true);
-
     try {
-      const subtotal = cart.reduce((sum, item) => sum + (item.preco_venda * item.quantidade), 0);
+      const subtotal = cart.reduce((sum, item) => sum + item.preco_venda * item.quantidade, 0);
       const totalDescontos = cart.reduce((sum, item) => sum + item.desconto_item, 0);
-      
-      // Criar venda
-      const { data: venda, error: vendaError } = await supabase
-        .from('vendas')
-        .insert({
-          cliente_id: selectedClient && selectedClient !== 'sem-cliente' ? selectedClient : null,
-          usuario_id: user.id,
-          subtotal,
-          desconto: totalDescontos,
-          total: getTotal(),
-          forma_pagamento: formaPagamento,
-        })
-        .select()
-        .single();
 
+      // Criar venda
+      const {
+        data: venda,
+        error: vendaError
+      } = await supabase.from('vendas').insert({
+        cliente_id: selectedClient && selectedClient !== 'sem-cliente' ? selectedClient : null,
+        usuario_id: user.id,
+        subtotal,
+        desconto: totalDescontos,
+        total: getTotal(),
+        forma_pagamento: formaPagamento
+      }).select().single();
       if (vendaError) throw vendaError;
 
       // Inserir itens da venda
@@ -551,30 +455,26 @@ const PDV = () => {
         quantidade: item.quantidade,
         preco_unitario: item.preco_venda,
         desconto_item: item.desconto_item,
-        subtotal: item.subtotal,
+        subtotal: item.subtotal
       }));
-
-      const { error: itensError } = await supabase
-        .from('itens_venda')
-        .insert(itensVenda);
-
+      const {
+        error: itensError
+      } = await supabase.from('itens_venda').insert(itensVenda);
       if (itensError) throw itensError;
 
       // Limpar carrinho
       setCart([]);
       setSelectedClient('sem-cliente');
       setFormaPagamento('');
-      
+
       // Focar novamente no input de código
       if (barcodeInputRef.current) {
         barcodeInputRef.current.focus();
       }
-      
       toast({
         title: "Venda finalizada!",
-        description: `Venda #${venda.numero_venda} realizada com sucesso`,
+        description: `Venda #${venda.numero_venda} realizada com sucesso`
       });
-
     } catch (error) {
       console.error('Erro ao finalizar venda:', error);
       toast({
@@ -586,16 +486,13 @@ const PDV = () => {
       setLoading(false);
     }
   };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
   };
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 h-full">
+  return <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 h-full">
       {/* Área principal do caixa */}
       <div className="lg:col-span-3 space-y-4 lg:space-y-6">
         <Card className="card-gradient">
@@ -605,42 +502,26 @@ const PDV = () => {
                 <Calculator className="h-5 w-5" />
                 <span>PDV - Ponto de Venda</span>
               </div>
-              {!isMobile && (
-                <div className="text-sm text-muted-foreground whitespace-nowrap">
+              {!isMobile && <div className="text-sm text-muted-foreground whitespace-nowrap">
                   F5: Buscar | F7: Não cadastrado | F2: Finalizar
-                </div>
-              )}
+                </div>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Código de Barras / Código Interno</Label>
-              <Input
-                ref={barcodeInputRef}
-                type="text"
-                placeholder="Digite o código ou bipe o produto"
-                className="text-lg font-mono"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleBarcodeSearch(searchTerm);
-                  } else if (e.key === 'Tab' && !e.shiftKey) {
-                    // Tab normal vai para o próximo campo naturalmente
-                  }
-                }}
-              />
-              {vendaSemCadastro && (
-                <Button
-                  variant="outline"
-                  onClick={() => setIsProdutoNaoCadastradoOpen(true)}
-                  className="w-full sm:w-auto"
-                >
+              <Input ref={barcodeInputRef} type="text" placeholder="Digite o código ou bipe o produto" className="text-lg font-mono" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleBarcodeSearch(searchTerm);
+              } else if (e.key === 'Tab' && !e.shiftKey) {
+                // Tab normal vai para o próximo campo naturalmente
+              }
+            }} />
+              {vendaSemCadastro && <Button variant="outline" onClick={() => setIsProdutoNaoCadastradoOpen(true)} className="w-full sm:w-auto">
                   <PackagePlus className="h-4 w-4 mr-2" />
                   Produto não cadastrado {!isMobile && "(F7)"}
-                </Button>
-              )}
+                </Button>}
             </div>
           </CardContent>
         </Card>
@@ -659,60 +540,34 @@ const PDV = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {cart.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+            {cart.length === 0 ? <p className="text-center text-muted-foreground py-8">
                 Use o leitor de código de barras ou pressione F5 para buscar produtos
-              </p>
-            ) : (
-              <div className="space-y-2 lg:space-y-3 max-h-96 overflow-y-auto">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 lg:p-4 bg-muted/50 rounded-lg gap-3">
+              </p> : <div className="space-y-2 lg:space-y-3 max-h-96 overflow-y-auto">
+                {cart.map(item => <div key={item.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 lg:p-4 bg-muted/50 rounded-lg gap-3">
                     <div className="flex-1 min-w-0 w-full lg:w-auto">
                       <p className="font-medium text-sm lg:text-base">{item.nome}</p>
                       <p className="text-xs lg:text-sm text-muted-foreground">
                         {formatCurrency(item.preco_venda)} cada
-                        {item.desconto_item > 0 && (
-                          <span className="text-success ml-2">
+                        {item.desconto_item > 0 && <span className="text-success ml-2">
                             (desc: {formatCurrency(item.desconto_item)})
-                          </span>
-                        )}
+                          </span>}
                       </p>
                     </div>
                     <div className="flex items-center justify-between lg:justify-start w-full lg:w-auto gap-2">
                       <div className="flex items-center space-x-1 lg:space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(item.id, item.quantidade - 1)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="outline" onClick={() => updateQuantity(item.id, item.quantidade - 1)} className="h-8 w-8 p-0">
                           <Minus className="h-3 w-3" />
                         </Button>
                         <span className="w-8 lg:w-12 text-center font-mono text-base lg:text-lg">{item.quantidade}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateQuantity(item.id, item.quantidade + 1)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="outline" onClick={() => updateQuantity(item.id, item.quantidade + 1)} className="h-8 w-8 p-0">
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
                       <div className="flex items-center space-x-1 lg:space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openDescontoItem(item.id)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="outline" onClick={() => openDescontoItem(item.id)} className="h-8 w-8 p-0">
                           <Percent className="h-3 w-3" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => removeFromCart(item.id)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="destructive" onClick={() => removeFromCart(item.id)} className="h-8 w-8 p-0">
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -720,10 +575,8 @@ const PDV = () => {
                         <p className="font-bold text-base lg:text-lg">{formatCurrency(item.subtotal)}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </CardContent>
         </Card>
       </div>
@@ -742,72 +595,40 @@ const PDV = () => {
             <div className="space-y-2">
               <Label>Cliente (Opcional)</Label>
               <div className="relative">
-                <Input
-                  placeholder="Buscar por nome, CPF ou telefone..."
-                  value={clienteSearchTerm}
-                  onChange={(e) => handleClienteSearch(e.target.value)}
-                  onFocus={() => clienteSearchTerm && setShowClienteDropdown(true)}
-                />
+                <Input placeholder="Buscar por nome, CPF ou telefone..." value={clienteSearchTerm} onChange={e => handleClienteSearch(e.target.value)} onFocus={() => clienteSearchTerm && setShowClienteDropdown(true)} />
                 
-                {showClienteDropdown && (
-                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto">
-                    {filteredClientes.length > 0 ? (
-                      filteredClientes.map((cliente) => (
-                        <div
-                          key={cliente.id}
-                          className="px-3 py-2 hover:bg-accent cursor-pointer"
-                          onClick={() => handleSelectCliente(cliente)}
-                        >
+                {showClienteDropdown && <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto">
+                    {filteredClientes.length > 0 ? filteredClientes.map(cliente => <div key={cliente.id} className="px-3 py-2 hover:bg-accent cursor-pointer" onClick={() => handleSelectCliente(cliente)}>
                           <p className="font-medium">{cliente.nome}</p>
                           <p className="text-sm text-muted-foreground">
                             {cliente.cpf && `CPF: ${cliente.cpf}`}
                             {cliente.cpf && cliente.telefone && ' | '}
                             {cliente.telefone && `Tel: ${cliente.telefone}`}
                           </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-3 py-4 text-center">
+                        </div>) : <div className="px-3 py-4 text-center">
                         <p className="text-sm text-muted-foreground mb-2">
                           Nenhum cliente encontrado
                         </p>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setIsNovoClienteOpen(true);
-                            setShowClienteDropdown(false);
-                          }}
-                        >
+                        <Button size="sm" onClick={() => {
+                    setIsNovoClienteOpen(true);
+                    setShowClienteDropdown(false);
+                  }}>
                           <Plus className="h-3 w-3 mr-1" />
                           Cadastrar Novo Cliente
                         </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
               </div>
               
               <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedClient('');
-                    setClienteSearchTerm('');
-                    setShowClienteDropdown(false);
-                  }}
-                  className="flex-1"
-                >
+                <Button type="button" variant="outline" size="sm" onClick={() => {
+                setSelectedClient('');
+                setClienteSearchTerm('');
+                setShowClienteDropdown(false);
+              }} className="flex-1">
                   Limpar
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsNovoClienteOpen(true)}
-                  className="flex-1"
-                >
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsNovoClienteOpen(true)} className="flex-1">
                   <Plus className="h-3 w-3 mr-1" />
                   Novo Cliente
                 </Button>
@@ -858,25 +679,11 @@ const PDV = () => {
             </div>
 
             <div className="space-y-2">
-              <Button 
-                onClick={finalizarVenda}
-                disabled={cart.length === 0 || loading}
-                className="w-full"
-                size="lg"
-              >
+              <Button onClick={finalizarVenda} disabled={cart.length === 0 || loading} className="w-full" size="lg">
                 {loading ? 'Finalizando...' : 'Finalizar Venda (F2)'}
               </Button>
               
-              {vendaSemCadastro && (
-                <Button 
-                  onClick={() => setIsProdutoNaoCadastradoOpen(true)} 
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Produto Não Cadastrado
-                </Button>
-              )}
+              {vendaSemCadastro}
             </div>
           </CardContent>
         </Card>
@@ -890,29 +697,18 @@ const PDV = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Input
-                placeholder="Digite o nome, código interno ou código de barras..."
-                value={productSearchTerm}
-                onChange={(e) => setProductSearchTerm(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    searchProducts();
-                  }
-                }}
-                autoFocus
-              />
+              <Input placeholder="Digite o nome, código interno ou código de barras..." value={productSearchTerm} onChange={e => setProductSearchTerm(e.target.value)} onKeyPress={e => {
+              if (e.key === 'Enter') {
+                searchProducts();
+              }
+            }} autoFocus />
               <Button onClick={searchProducts}>
                 <Search className="w-4 h-4" />
               </Button>
             </div>
             
             <div className="max-h-96 overflow-y-auto">
-              {searchedProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer"
-                  onClick={() => addToCart(product)}
-                >
+              {searchedProducts.map(product => <div key={product.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer" onClick={() => addToCart(product)}>
                   <div>
                     <p className="font-medium">{product.nome}</p>
                     <p className="text-sm text-muted-foreground">
@@ -922,8 +718,7 @@ const PDV = () => {
                   <div className="text-right">
                     <p className="font-bold">{formatCurrency(product.preco_venda)}</p>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </DialogContent>
@@ -941,22 +736,11 @@ const PDV = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Valor do desconto</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={valorDescontoItem}
-                onChange={(e) => setValorDescontoItem(parseFloat(e.target.value) || 0)}
-                placeholder="0,00"
-              />
+              <Input type="number" step="0.01" value={valorDescontoItem} onChange={e => setValorDescontoItem(parseFloat(e.target.value) || 0)} placeholder="0,00" />
             </div>
             <div className="space-y-2">
               <Label>Senha para desconto</Label>
-              <Input
-                type="password"
-                value={senhaDesconto}
-                onChange={(e) => setSenhaDesconto(e.target.value)}
-                placeholder="Digite a senha"
-              />
+              <Input type="password" value={senhaDesconto} onChange={e => setSenhaDesconto(e.target.value)} placeholder="Digite a senha" />
             </div>
           </div>
           <DialogFooter>
@@ -978,44 +762,34 @@ const PDV = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="novo-cliente-nome">Nome *</Label>
-              <Input
-                id="novo-cliente-nome"
-                value={novoCliente.nome}
-                onChange={(e) => setNovoCliente({...novoCliente, nome: e.target.value.toUpperCase()})}
-                placeholder="NOME DO CLIENTE"
-                className="uppercase"
-              />
+              <Input id="novo-cliente-nome" value={novoCliente.nome} onChange={e => setNovoCliente({
+              ...novoCliente,
+              nome: e.target.value.toUpperCase()
+            })} placeholder="NOME DO CLIENTE" className="uppercase" />
             </div>
 
             <div>
               <Label htmlFor="novo-cliente-cpf">CPF</Label>
-              <Input
-                id="novo-cliente-cpf"
-                value={novoCliente.cpf}
-                onChange={(e) => setNovoCliente({...novoCliente, cpf: e.target.value})}
-                placeholder="000.000.000-00"
-              />
+              <Input id="novo-cliente-cpf" value={novoCliente.cpf} onChange={e => setNovoCliente({
+              ...novoCliente,
+              cpf: e.target.value
+            })} placeholder="000.000.000-00" />
             </div>
 
             <div>
               <Label htmlFor="novo-cliente-telefone">Telefone</Label>
-              <Input
-                id="novo-cliente-telefone"
-                value={novoCliente.telefone}
-                onChange={(e) => setNovoCliente({...novoCliente, telefone: e.target.value})}
-                placeholder="(00) 00000-0000"
-              />
+              <Input id="novo-cliente-telefone" value={novoCliente.telefone} onChange={e => setNovoCliente({
+              ...novoCliente,
+              telefone: e.target.value
+            })} placeholder="(00) 00000-0000" />
             </div>
 
             <div>
               <Label htmlFor="novo-cliente-email">E-mail</Label>
-              <Input
-                id="novo-cliente-email"
-                type="email"
-                value={novoCliente.email}
-                onChange={(e) => setNovoCliente({...novoCliente, email: e.target.value})}
-                placeholder="email@exemplo.com"
-              />
+              <Input id="novo-cliente-email" type="email" value={novoCliente.email} onChange={e => setNovoCliente({
+              ...novoCliente,
+              email: e.target.value
+            })} placeholder="email@exemplo.com" />
             </div>
           </div>
 
@@ -1043,48 +817,34 @@ const PDV = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="temp-nome">Nome do Produto *</Label>
-              <Input
-                id="temp-nome"
-                value={produtoTemp.nome}
-                onChange={(e) => setProdutoTemp({...produtoTemp, nome: e.target.value})}
-                placeholder="Digite o nome do produto"
-              />
+              <Input id="temp-nome" value={produtoTemp.nome} onChange={e => setProdutoTemp({
+              ...produtoTemp,
+              nome: e.target.value
+            })} placeholder="Digite o nome do produto" />
             </div>
 
             <div>
               <Label htmlFor="temp-preco">Preço de Venda *</Label>
-              <Input
-                id="temp-preco"
-                type="number"
-                step="0.01"
-                value={produtoTemp.preco_venda || ''}
-                onChange={(e) => setProdutoTemp({...produtoTemp, preco_venda: parseFloat(e.target.value) || 0})}
-                placeholder="0,00"
-              />
+              <Input id="temp-preco" type="number" step="0.01" value={produtoTemp.preco_venda || ''} onChange={e => setProdutoTemp({
+              ...produtoTemp,
+              preco_venda: parseFloat(e.target.value) || 0
+            })} placeholder="0,00" />
             </div>
 
             <div>
               <Label htmlFor="temp-custo">Preço de Custo (opcional)</Label>
-              <Input
-                id="temp-custo"
-                type="number"
-                step="0.01"
-                value={produtoTemp.preco_custo || ''}
-                onChange={(e) => setProdutoTemp({...produtoTemp, preco_custo: parseFloat(e.target.value) || 0})}
-                placeholder="0,00"
-              />
+              <Input id="temp-custo" type="number" step="0.01" value={produtoTemp.preco_custo || ''} onChange={e => setProdutoTemp({
+              ...produtoTemp,
+              preco_custo: parseFloat(e.target.value) || 0
+            })} placeholder="0,00" />
             </div>
 
             <div>
               <Label htmlFor="temp-qtd">Quantidade</Label>
-              <Input
-                id="temp-qtd"
-                type="number"
-                value={produtoTemp.quantidade}
-                onChange={(e) => setProdutoTemp({...produtoTemp, quantidade: parseInt(e.target.value) || 1})}
-                placeholder="1"
-                min="1"
-              />
+              <Input id="temp-qtd" type="number" value={produtoTemp.quantidade} onChange={e => setProdutoTemp({
+              ...produtoTemp,
+              quantidade: parseInt(e.target.value) || 1
+            })} placeholder="1" min="1" />
             </div>
           </div>
 
@@ -1098,8 +858,6 @@ const PDV = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default PDV;
