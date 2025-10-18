@@ -56,6 +56,7 @@ const Categorias = () => {
   }, []);
 
   const loadCategorias = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('categorias')
       .select('*')
@@ -67,10 +68,12 @@ const Categorias = () => {
         description: "Erro ao carregar categorias",
         variant: "destructive"
       });
+      setLoading(false);
       return;
     }
     
     setCategorias(data || []);
+    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -339,16 +342,6 @@ const Categorias = () => {
               </TableBody>
             </Table>
           </div>
-          
-          {filteredCategorias.length === 0 && (
-            <div className="text-center py-8">
-              <Tag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">Nenhuma categoria encontrada</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando sua primeira categoria'}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

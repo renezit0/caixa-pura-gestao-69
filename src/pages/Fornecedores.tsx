@@ -64,6 +64,7 @@ const Fornecedores = () => {
   }, []);
 
   const loadFornecedores = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('fornecedores')
       .select('*')
@@ -75,10 +76,12 @@ const Fornecedores = () => {
         description: "Erro ao carregar fornecedores",
         variant: "destructive"
       });
+      setLoading(false);
       return;
     }
     
     setFornecedores(data || []);
+    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -456,16 +459,6 @@ const Fornecedores = () => {
               </TableBody>
             </Table>
           </div>
-          
-          {filteredFornecedores.length === 0 && (
-            <div className="text-center py-8">
-              <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">Nenhum fornecedor encontrado</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro fornecedor'}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

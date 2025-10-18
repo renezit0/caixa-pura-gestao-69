@@ -65,6 +65,7 @@ const Clientes = () => {
   }, []);
 
   const loadClientes = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
@@ -76,10 +77,12 @@ const Clientes = () => {
         description: "Erro ao carregar clientes",
         variant: "destructive"
       });
+      setLoading(false);
       return;
     }
     
     setClientes(data || []);
+    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -459,16 +462,6 @@ const Clientes = () => {
               </TableBody>
             </Table>
           </div>
-          
-          {filteredClientes.length === 0 && (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">Nenhum cliente encontrado</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando seu primeiro cliente'}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
