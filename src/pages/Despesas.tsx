@@ -128,11 +128,11 @@ export default function Despesas() {
   const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Despesas</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold">Despesas</h1>
           <p className="text-muted-foreground">Controle suas despesas e custos</p>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>

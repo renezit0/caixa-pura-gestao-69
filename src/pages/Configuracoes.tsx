@@ -161,42 +161,42 @@ export default function Configuracoes() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground">Configure o sistema conforme suas necessidades</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Configurações</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Configure o sistema conforme suas necessidades</p>
         </div>
       </div>
 
-      <Tabs defaultValue="empresa" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
-          <TabsTrigger value="empresa">
-            <Store className="w-4 h-4 mr-2" />
-            Empresa
+      <Tabs defaultValue="empresa" className="space-y-4 lg:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1">
+          <TabsTrigger value="empresa" className="text-xs lg:text-sm">
+            <Store className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Empresa</span>
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="usuarios">
-              <Users className="w-4 h-4 mr-2" />
-              Usuários
+            <TabsTrigger value="usuarios" className="text-xs lg:text-sm">
+              <Users className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+              <span className="hidden lg:inline">Usuários</span>
             </TabsTrigger>
           )}
-          <TabsTrigger value="sistema">
-            <Settings className="w-4 h-4 mr-2" />
-            Sistema
+          <TabsTrigger value="sistema" className="text-xs lg:text-sm">
+            <Settings className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Sistema</span>
           </TabsTrigger>
-          <TabsTrigger value="pdv">
-            <Smartphone className="w-4 h-4 mr-2" />
-            PDV
+          <TabsTrigger value="pdv" className="text-xs lg:text-sm">
+            <Smartphone className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">PDV</span>
           </TabsTrigger>
-          <TabsTrigger value="estoque">
-            <Database className="w-4 h-4 mr-2" />
-            Estoque
+          <TabsTrigger value="estoque" className="text-xs lg:text-sm">
+            <Database className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Estoque</span>
           </TabsTrigger>
-          <TabsTrigger value="impressao">
-            <Printer className="w-4 h-4 mr-2" />
-            Impressão
+          <TabsTrigger value="impressao" className="text-xs lg:text-sm">
+            <Printer className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Impressão</span>
           </TabsTrigger>
         </TabsList>
 

@@ -271,14 +271,14 @@ export default function Relatorios() {
   const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Relatórios</h1>
-          <p className="text-muted-foreground">Análises e insights do negócio</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Relatórios</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Análises e insights do negócio</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -292,7 +292,7 @@ export default function Relatorios() {
             </Label>
           </div>
           <Select value={periodo} onValueChange={setPeriodo}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -302,7 +302,7 @@ export default function Relatorios() {
               <SelectItem value="90">Últimos 90 dias</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
+          <Button variant="outline" className="w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>

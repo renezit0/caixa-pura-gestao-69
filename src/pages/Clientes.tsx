@@ -182,12 +182,12 @@ const Clientes = () => {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground">Gerencie sua base de clientes</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Clientes</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Gerencie sua base de clientes</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

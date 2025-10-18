@@ -281,12 +281,12 @@ export default function Estoque() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Controle de Estoque</h1>
-          <p className="text-muted-foreground">Gerencie entradas e saídas de produtos</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Controle de Estoque</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Gerencie entradas e saídas de produtos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full lg:w-auto flex-wrap">
           <Dialog open={showReceberMercadoria} onOpenChange={setShowReceberMercadoria}>
             <DialogTrigger asChild>
               <Button variant="outline">
