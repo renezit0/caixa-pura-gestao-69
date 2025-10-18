@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   ShoppingCart,
   Trash2,
@@ -17,7 +18,8 @@ import {
   Calculator,
   CreditCard,
   Banknote,
-  Percent
+  Percent,
+  PackagePlus
 } from 'lucide-react';
 import {
   Dialog,
@@ -60,6 +62,7 @@ interface Cliente {
 const PDV = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -111,11 +114,16 @@ const PDV = () => {
     loadClientes();
     loadConfiguracoes();
     
-    // Listeners para teclas F5 e F2
+    // Listeners para teclas F5, F7 e F2
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'F5') {
         e.preventDefault();
         setShowProductSearch(true);
+      } else if (e.key === 'F7') {
+        e.preventDefault();
+        if (vendaSemCadastro) {
+          setIsProdutoNaoCadastradoOpen(true);
+        }
       } else if (e.key === 'F2') {
         e.preventDefault();
         finalizarVenda();
@@ -124,7 +132,7 @@ const PDV = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [vendaSemCadastro]);
 
   const loadConfiguracoes = async () => {
     // Carregar venda sem cadastro
@@ -592,13 +600,28 @@ const PDV = () => {
       <div className="lg:col-span-3 space-y-4 lg:space-y-6">
         <Card className="card-gradient">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center space-x-2">
                 <Calculator className="h-5 w-5" />
                 <span>PDV - Ponto de Venda</span>
               </div>
-              <div className="text-sm text-muted-foreground">
-                F5: Buscar | F2: Finalizar
+              <div className="flex items-center gap-2">
+                {vendaSemCadastro && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsProdutoNaoCadastradoOpen(true)}
+                    className="h-8"
+                  >
+                    <PackagePlus className="h-4 w-4 mr-1" />
+                    Produto não cadastrado
+                  </Button>
+                )}
+                {!isMobile && (
+                  <div className="text-sm text-muted-foreground whitespace-nowrap">
+                    F5: Buscar | F7: Não cadastrado | F2: Finalizar
+                  </div>
+                )}
               </div>
             </CardTitle>
           </CardHeader>
