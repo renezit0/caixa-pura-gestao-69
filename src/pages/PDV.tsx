@@ -605,24 +605,11 @@ const PDV = () => {
                 <Calculator className="h-5 w-5" />
                 <span>PDV - Ponto de Venda</span>
               </div>
-              <div className="flex items-center gap-2">
-                {vendaSemCadastro && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsProdutoNaoCadastradoOpen(true)}
-                    className="h-8"
-                  >
-                    <PackagePlus className="h-4 w-4 mr-1" />
-                    Produto não cadastrado
-                  </Button>
-                )}
-                {!isMobile && (
-                  <div className="text-sm text-muted-foreground whitespace-nowrap">
-                    F5: Buscar | F7: Não cadastrado | F2: Finalizar
-                  </div>
-                )}
-              </div>
+              {!isMobile && (
+                <div className="text-sm text-muted-foreground whitespace-nowrap">
+                  F5: Buscar | F7: Não cadastrado | F2: Finalizar
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -644,6 +631,16 @@ const PDV = () => {
                   }
                 }}
               />
+              {vendaSemCadastro && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsProdutoNaoCadastradoOpen(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <PackagePlus className="h-4 w-4 mr-2" />
+                  Produto não cadastrado {!isMobile && "(F7)"}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
