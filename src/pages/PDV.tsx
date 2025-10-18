@@ -412,7 +412,7 @@ const PDV = () => {
         estoque_minimo: 0,
         unidade_medida: 'UN',
         produto_temporario: true,
-        codigo_interno: Date.now().toString()
+        codigo_interno: Math.floor(Math.random() * 99900 + 100).toString()
       })
       .select()
       .single();
