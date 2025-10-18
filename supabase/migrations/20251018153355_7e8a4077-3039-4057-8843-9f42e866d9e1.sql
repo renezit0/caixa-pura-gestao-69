@@ -1,0 +1,4 @@
+-- Habilitar RLS nas últimas tabelas que faltam
+ALTER TABLE categorias ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fornecedores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE produtos ENABLE ROW LEVEL SECURITY;

@@ -32,10 +32,21 @@ export const EmpresaConfig: React.FC = () => {
       .from('empresa')
       .select('*')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
       setEmpresa(data);
+    } else if (!error && !data) {
+      // Se não existe empresa, criar uma
+      const { data: newEmpresa, error: insertError } = await supabase
+        .from('empresa')
+        .insert({ nome: 'seeStore' })
+        .select()
+        .single();
+      
+      if (!insertError && newEmpresa) {
+        setEmpresa(newEmpresa);
+      }
     }
     setLoading(false);
   };
