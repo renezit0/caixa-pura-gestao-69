@@ -49,14 +49,18 @@ export default function Vendas() {
 
   const getDataInicio = () => {
     if (filtroData === 'hoje') {
-      return new Date().toISOString().split('T')[0];
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      return hoje.toISOString();
     } else if (filtroData === 'semana') {
       const semanaAtras = new Date();
       semanaAtras.setDate(semanaAtras.getDate() - 7);
+      semanaAtras.setHours(0, 0, 0, 0);
       return semanaAtras.toISOString();
     } else if (filtroData === 'mes') {
       const mesAtras = new Date();
       mesAtras.setMonth(mesAtras.getMonth() - 1);
+      mesAtras.setHours(0, 0, 0, 0);
       return mesAtras.toISOString();
     }
     return '';
