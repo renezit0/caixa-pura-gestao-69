@@ -153,13 +153,19 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
   
-  /* Scrollbar customizada minimalista sem afetar layout */
+  /* Evitar deslocamento quando scrollbar desaparece */
   html {
     overflow-y: scroll;
+    scrollbar-gutter: stable;
   }
   
   body {
     overflow-x: hidden;
+  }
+  
+  /* Garantir que quando radix adiciona overflow hidden, mantenha o espaço da scrollbar */
+  body[style*="overflow: hidden"] {
+    padding-right: 0 !important;
   }
   
   /* Hide scrollbar on mobile */
