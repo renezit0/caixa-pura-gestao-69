@@ -114,8 +114,9 @@ export default function Vendas() {
   const totalFaturamento = filteredVendas.reduce((sum, venda) => sum + venda.total, 0);
   const ticketMedio = totalVendas > 0 ? totalFaturamento / totalVendas : 0;
   const vendasHoje = vendas.filter(v => {
-    const hoje = new Date().toISOString().split('T')[0];
-    return v.created_at.startsWith(hoje);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return v.created_at >= hoje.toISOString();
   }).length;
 
   const handleVerDetalhes = (venda: Venda) => {

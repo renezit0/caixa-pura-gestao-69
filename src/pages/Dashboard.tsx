@@ -88,8 +88,10 @@ const Dashboard = () => {
         .select('id')
         .eq('ativo', true);
 
-      const hoje = new Date().toISOString().split('T')[0];
-      const vendasHoje = vendas?.filter(v => v.created_at.startsWith(hoje)) || [];
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const hojeISO = hoje.toISOString();
+      const vendasHoje = vendas?.filter(v => v.created_at >= hojeISO) || [];
       const produtosBaixoEstoque = produtos?.filter(p => p.estoque_atual <= p.estoque_minimo) || [];
       
       const valorTotalEstoque = produtos?.reduce((acc, p) => 
