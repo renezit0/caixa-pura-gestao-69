@@ -151,20 +151,13 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-  }
-  
-  /* Evitar deslocamento quando scrollbar desaparece */
-  html {
     overflow-y: scroll;
     scrollbar-gutter: stable;
   }
   
-  body {
-    overflow-x: hidden;
-  }
-  
-  /* Garantir que quando radix adiciona overflow hidden, mantenha o espaço da scrollbar */
+  /* Evitar deslocamento quando dropdowns/modals abrem */
   body[style*="overflow: hidden"] {
+    overflow-y: scroll !important;
     padding-right: 0 !important;
   }
   
