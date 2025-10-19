@@ -80,6 +80,7 @@ export default function Relatorios() {
       const diasAtras = parseInt(periodo);
       const dataInicio = new Date();
       dataInicio.setDate(dataInicio.getDate() - diasAtras);
+      dataInicio.setHours(0, 0, 0, 0);
       
       const { data, error } = await supabase
         .from('vendas')
@@ -121,6 +122,7 @@ export default function Relatorios() {
       const diasAtras = parseInt(periodo);
       const dataInicio = new Date();
       dataInicio.setDate(dataInicio.getDate() - diasAtras);
+      dataInicio.setHours(0, 0, 0, 0);
 
       const { data, error } = await supabase
         .from('itens_venda')
@@ -165,6 +167,7 @@ export default function Relatorios() {
       const diasAtras = parseInt(periodo);
       const dataInicio = new Date();
       dataInicio.setDate(dataInicio.getDate() - diasAtras);
+      dataInicio.setHours(0, 0, 0, 0);
 
       // Buscar vendas do período
       const { data: vendas, error: vendasError } = await supabase
