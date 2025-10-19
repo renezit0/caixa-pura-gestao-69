@@ -92,23 +92,26 @@ export default function Relatorios() {
 
       // Agrupar por dia
       const vendasPorDia = data.reduce((acc: any, venda: any) => {
-        const data = new Date(venda.created_at).toISOString().split('T')[0];
-        if (!acc[data]) {
-          acc[data] = {
-            data,
+        const dataVenda = new Date(venda.created_at);
+        const dataLocal = new Date(dataVenda.getTime() - (dataVenda.getTimezoneOffset() * 60000));
+        const dataString = dataLocal.toISOString().split('T')[0];
+        
+        if (!acc[dataString]) {
+          acc[dataString] = {
+            data: dataString,
             total_vendas: 0,
             quantidade_vendas: 0
           };
         }
-        acc[data].total_vendas += venda.total;
-        acc[data].quantidade_vendas += 1;
+        acc[dataString].total_vendas += venda.total;
+        acc[dataString].quantidade_vendas += 1;
         return acc;
       }, {});
 
       const resultado = Object.values(vendasPorDia).map((dia: any) => ({
         ...dia,
         ticket_medio: dia.quantidade_vendas > 0 ? dia.total_vendas / dia.quantidade_vendas : 0,
-        data: new Date(dia.data).toLocaleDateString('pt-BR')
+        data: new Date(dia.data + 'T12:00:00').toLocaleDateString('pt-BR')
       }));
 
       setVendasPorDia(resultado);

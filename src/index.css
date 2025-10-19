@@ -156,7 +156,6 @@
   /* Scrollbar customizada minimalista sem afetar layout */
   html {
     overflow-y: scroll;
-    scrollbar-gutter: stable;
   }
   
   body {
