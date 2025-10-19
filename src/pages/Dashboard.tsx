@@ -80,7 +80,8 @@ const Dashboard = () => {
       const { data: produtos } = await supabase
         .from('produtos')
         .select('id, estoque_atual, estoque_minimo, preco_venda')
-        .eq('ativo', true);
+        .eq('ativo', true)
+        .eq('produto_temporario', false);
 
       // Buscar clientes
       const { data: clientes } = await supabase

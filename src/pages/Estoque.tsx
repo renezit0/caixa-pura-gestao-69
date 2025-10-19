@@ -32,6 +32,7 @@ interface Produto {
   estoque_minimo: number;
   preco_custo: number;
   preco_venda: number;
+  produto_temporario?: boolean;
   categoria?: { nome: string };
 }
 
@@ -79,6 +80,7 @@ export default function Estoque() {
           estoque_minimo,
           preco_custo,
           preco_venda,
+          produto_temporario,
           categoria:categorias(nome)
         `)
         .eq('ativo', true)
@@ -276,7 +278,9 @@ export default function Estoque() {
     produto.codigo_interno.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const produtosBaixoEstoque = produtos.filter(p => p.estoque_atual <= p.estoque_minimo);
+  const produtosBaixoEstoque = produtos.filter(p => 
+    p.estoque_atual <= p.estoque_minimo && !p.produto_temporario
+  );
   const estoqueTotal = produtos.reduce((sum, p) => sum + (p.estoque_atual * p.preco_custo), 0);
 
   return (

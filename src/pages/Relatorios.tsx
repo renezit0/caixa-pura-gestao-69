@@ -225,7 +225,8 @@ export default function Relatorios() {
       const { data: produtosBaixoEstoque, error: estoqueError } = await supabase
         .from('produtos')
         .select('id, estoque_atual, estoque_minimo')
-        .eq('ativo', true);
+        .eq('ativo', true)
+        .eq('produto_temporario', false);
 
       if (estoqueError) throw estoqueError;
 
