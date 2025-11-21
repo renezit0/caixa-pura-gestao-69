@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ShoppingCart, Trash2, Plus, Minus, Search, Calculator, CreditCard, Banknote, Percent, PackagePlus } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, Search, Calculator, CreditCard, Banknote, Percent, PackagePlus, Printer } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { imprimirCupomFiscal } from '@/lib/impressao';
 interface Product {
   id: string;
   nome: string;
@@ -462,9 +463,57 @@ const PDV = () => {
       } = await supabase.from('itens_venda').insert(itensVenda);
       if (itensError) throw itensError;
 
+      // Buscar dados da empresa para impressão
+      const { data: empresaData } = await supabase
+        .from('empresa')
+        .select('nome, cnpj, endereco, telefone')
+        .single();
+
+      // Buscar dados do cliente se houver
+      let clienteData = undefined;
+      if (selectedClient && selectedClient !== 'sem-cliente') {
+        const { data } = await supabase
+          .from('clientes')
+          .select('nome, cpf, telefone')
+          .eq('id', selectedClient)
+          .single();
+        clienteData = data || undefined;
+      }
+
+      // Preparar dados para impressão
+      const dadosImpressao = {
+        venda: {
+          id: venda.id,
+          numero_venda: venda.numero_venda,
+          created_at: venda.created_at || new Date().toISOString(),
+          subtotal: venda.subtotal,
+          desconto: venda.desconto || 0,
+          total: venda.total,
+          forma_pagamento: venda.forma_pagamento || ''
+        },
+        itens: cart.map(item => ({
+          nome: item.nome,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_venda,
+          desconto_item: item.desconto_item,
+          subtotal: item.subtotal
+        })),
+        cliente: clienteData,
+        empresa: empresaData || {
+          nome: 'seeStore',
+          cnpj: undefined,
+          endereco: undefined,
+          telefone: undefined
+        }
+      };
+
+      // Imprimir cupom fiscal
+      imprimirCupomFiscal(dadosImpressao);
+
       // Limpar carrinho
       setCart([]);
       setSelectedClient('sem-cliente');
+      setClienteSearchTerm('');
       setFormaPagamento('');
 
       // Focar novamente no input de código
@@ -680,10 +729,9 @@ const PDV = () => {
 
             <div className="space-y-2">
               <Button onClick={finalizarVenda} disabled={cart.length === 0 || loading} className="w-full" size="lg">
+                <Printer className="h-4 w-4 mr-2" />
                 {loading ? 'Finalizando...' : 'Finalizar Venda (F2)'}
               </Button>
-              
-              {vendaSemCadastro}
             </div>
           </CardContent>
         </Card>
