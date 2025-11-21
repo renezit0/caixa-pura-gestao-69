@@ -687,10 +687,7 @@ export type Database = {
         Args: { user_identifier: string; user_password: string }
         Returns: Json
       }
-      gerar_codigo_interno: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      gerar_codigo_interno: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -698,10 +695,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
